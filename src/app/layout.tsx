@@ -35,6 +35,9 @@ const readex = Readex_Pro({
 });
 
 export const metadata: Metadata = {
+  // أساس الروابط المطلقة (صورة المشاركة، og:url). بدونه تبقى الروابط على
+  // localhost في الإنتاج فلا تظهر بطاقة المشاركة في واتساب وفيسبوك.
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: {
     default: "الدليل الشامل لمنهجية الإجابة في التاريخ والجغرافيا | Bac Arabe Sénégal",
     template: "%s | Bac Arabe Sénégal",
