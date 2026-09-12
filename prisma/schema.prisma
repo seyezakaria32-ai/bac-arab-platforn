@@ -1,0 +1,417 @@
+// ---------------------------------------------------------------------------
+//  Bac Arabe Sénégal — مخطط قاعدة البيانات
+//  المزوّد الافتراضي: PostgreSQL.
+//  للتطوير المحلي السريع يمكن التحويل إلى SQLite عبر:  npm run db:use-sqlite
+//  (لهذا السبب نتجنّب أنواع Enum و Json الخاصة بـ Postgres ونستعمل
+//   حقول نصّية مع ثوابت TypeScript في src/lib/constants.ts — أسهل للتوسّع أيضًا)
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ────────────────────────────── المستخدمون ──────────────────────────────
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  phone        String?
+  passwordHash String
+  role         String    @default("student") // student | admin
+  avatarUrl    String?
+  bio          String?
+  isActive     Boolean   @default(true)
+  lastSeenAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  subscriptions Subscription[]
+  payments      Payment[]
+  progress      LessonProgress[]
+  attempts      QuizAttempt[]
+  certificates  Certificate[]
+  notes         LessonNote[]
+
+  @@index([role])
+  @@index([createdAt])
+}
+
+// ───────────────────────── البرنامج / المسارات ─────────────────────────
+
+/// البرنامج التدريبي الكامل (الدليل الشامل لمنهجية الإجابة)
+model Course {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  subtitle    String?
+  description String?
+  coverImage  String?
+  instructor  String?
+  durationText String? // مثال: "شهران"
+  isPublished Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tracks        Track[]
+  subscriptions Subscription[]
+  payments      Payment[]
+  certificates  Certificate[]
+}
+
+/// المادة: التاريخ أو الجغرافيا
+model Track {
+  id          String   @id @default(cuid())
+  courseId    String
+  slug        String
+  title       String
+  description String?
+  icon        String? // اسم أيقونة أو رمز
+  color       String? // لون مميز للمسار
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+
+  course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  modules Module[]
+
+  @@unique([courseId, slug])
+  @@index([courseId, order])
+}
+
+/// الوحدة داخل المسار
+model Module {
+  id          String   @id @default(cuid())
+  trackId     String
+  title       String
+  description String?
+  order       Int      @default(0)
+  isPublished Boolean  @default(true)
+  /// الباقة المطلوبة للوصول: start | premium
+  requiredPlan String  @default("start")
+
+  track   Track    @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  lessons Lesson[]
+  quiz    Quiz?
+
+  @@index([trackId, order])
+}
+
+/// الدرس
+model Lesson {
+  id             String  @id @default(cuid())
+  moduleId       String
+  title          String
+  slug           String
+  order          Int     @default(0)
+  /// نوع المحتوى: video | text | mixed
+  contentType    String  @default("video")
+  videoUrl       String?
+  /// مزوّد الفيديو: youtube | vimeo | bunny | mux | direct
+  videoProvider  String  @default("youtube")
+  durationMinutes Int    @default(0)
+  summary        String?
+  /// محتوى الدرس (HTML مبسّط)
+  content        String?
+  /// أهداف الدرس (JSON: string[])
+  objectives     String?
+  /// تمرين الدرس (نص/HTML)
+  exercise       String?
+  isPublished    Boolean @default(true)
+  /// درس مجاني للمعاينة قبل الشراء
+  isFreePreview  Boolean @default(false)
+  /// الباقة المطلوبة: start | premium
+  requiredPlan   String  @default("start")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  resources LessonResource[]
+  progress  LessonProgress[]
+  notes     LessonNote[]
+
+  @@unique([moduleId, slug])
+  @@index([moduleId, order])
+}
+
+/// الملفات والموارد المرفقة بالدرس
+model LessonResource {
+  id           String @id @default(cuid())
+  lessonId     String
+  title        String
+  /// pdf | doc | image | link | audio
+  type         String @default("pdf")
+  url          String
+  sizeLabel    String?
+  order        Int    @default(0)
+  /// start | premium
+  requiredPlan String @default("start")
+
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId, order])
+}
+
+// ──────────────────────────── تقدّم الطالب ────────────────────────────
+
+model LessonProgress {
+  id                  String    @id @default(cuid())
+  userId              String
+  lessonId            String
+  /// in_progress | completed
+  status              String    @default("in_progress")
+  lastPositionSeconds Int       @default(0)
+  viewCount           Int       @default(0)
+  completedAt         DateTime?
+  startedAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, status])
+  @@index([lessonId])
+}
+
+/// ملاحظات الطالب الشخصية على الدرس
+model LessonNote {
+  id        String   @id @default(cuid())
+  userId    String
+  lessonId  String
+  body      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+}
+
+// ────────────────────────────── الاختبارات ──────────────────────────────
+
+model Quiz {
+  id               String  @id @default(cuid())
+  moduleId         String  @unique
+  title            String
+  description      String?
+  /// درجة النجاح بالنسبة المئوية
+  passScore        Int     @default(70)
+  /// 0 = محاولات غير محدودة
+  maxAttempts      Int     @default(0)
+  timeLimitMinutes Int     @default(0)
+  shuffleQuestions Boolean @default(false)
+  isPublished      Boolean @default(true)
+  /// start | premium
+  requiredPlan     String  @default("start")
+
+  module    Module        @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  questions Question[]
+  attempts  QuizAttempt[]
+}
+
+model Question {
+  id          String  @id @default(cuid())
+  quizId      String
+  /// mcq | multi | true_false | short | open
+  type        String  @default("mcq")
+  prompt      String
+  hint        String?
+  explanation String?
+  points      Int     @default(1)
+  order       Int     @default(0)
+  /// للأسئلة القصيرة: الإجابات المقبولة (JSON: string[])
+  acceptedAnswers String?
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  options Option[]
+
+  @@index([quizId, order])
+}
+
+model Option {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  isCorrect  Boolean @default(false)
+  order      Int     @default(0)
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId, order])
+}
+
+model QuizAttempt {
+  id            String    @id @default(cuid())
+  quizId        String
+  userId        String
+  attemptNumber Int       @default(1)
+  /// النتيجة بالنسبة المئوية
+  score         Int       @default(0)
+  earnedPoints  Int       @default(0)
+  totalPoints   Int       @default(0)
+  passed        Boolean   @default(false)
+  /// إجابات الطالب (JSON)
+  answers       String?
+  /// بانتظار تصحيح يدوي للأسئلة المفتوحة (باقة PREMIUM)
+  needsReview   Boolean   @default(false)
+  reviewNote    String?
+  startedAt     DateTime  @default(now())
+  submittedAt   DateTime?
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, quizId])
+  @@index([quizId])
+}
+
+// ──────────────────────── الباقات والاشتراك والدفع ────────────────────────
+
+model Plan {
+  id          String  @id @default(cuid())
+  /// START | PREMIUM_ELITE
+  code        String  @unique
+  name        String
+  tagline     String?
+  description String?
+  /// السعر بأصغر وحدة نقدية (سنت/سنتيم)
+  priceCents  Int     @default(0)
+  /// السعر قبل التخفيض (اختياري)
+  comparePriceCents Int?
+  currency    String  @default("XOF")
+  /// مدة الوصول بالأيام (0 = مدى الحياة)
+  durationDays Int    @default(0)
+  /// المزايا (JSON: {label:string, included:boolean}[])
+  features    String  @default("[]")
+  /// صلاحيات قابلة للتعديل من لوحة الإدارة (JSON: object)
+  capabilities String @default("{}")
+  badge       String?
+  isHighlighted Boolean @default(false)
+  isActive    Boolean @default(true)
+  order       Int     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subscriptions Subscription[]
+  payments      Payment[]
+}
+
+model Subscription {
+  id        String    @id @default(cuid())
+  userId    String
+  courseId  String
+  planId    String
+  /// pending | active | expired | cancelled
+  status    String    @default("pending")
+  startedAt DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  plan   Plan   @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@unique([userId, courseId])
+  @@index([status])
+}
+
+model Payment {
+  id             String    @id @default(cuid())
+  userId         String
+  courseId       String
+  planId         String
+  subscriptionId String?
+  /// wave | orange_money | cmi | manual | stripe ...
+  provider       String
+  /// مرجع العملية لدى المزوّد
+  providerRef    String?
+  /// مرجعنا الداخلي المعروض للطالب
+  reference      String    @unique
+  amountCents    Int
+  /// كود الخصم المطبَّق (إن وُجد) وقيمة الخصم — المبلغ أعلاه هو الصافي بعد الخصم
+  couponId       String?
+  discountCents  Int       @default(0)
+  currency       String    @default("XOF")
+  /// pending | awaiting_review | paid | failed | refunded
+  status         String    @default("pending")
+  /// إيصال التحويل المرفوع من الطالب (للدفع اليدوي)
+  receiptUrl     String?
+  payerNote      String?
+  adminNote      String?
+  /// استجابة المزوّد الخام (JSON)
+  rawPayload     String?
+  verifiedAt     DateTime?
+  verifiedById   String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course       Course        @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  plan         Plan          @relation(fields: [planId], references: [id])
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id])
+  coupon       Coupon?       @relation(fields: [couponId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+/// أكواد الخصم والإحالة (أساتذة، مؤثّرون، مدارس، عروض موسمية)
+model Coupon {
+  id          String    @id @default(cuid())
+  /// يُخزَّن بحروف كبيرة، والمقارنة لا تتأثّر بحالة الأحرف
+  code        String    @unique
+  description String?
+  /// صاحب الكود لتتبّع الإحالات (مثال: الأستاذ فلان، ثانوية كذا)
+  owner       String?
+  /// percent = نسبة مئوية | fixed = مبلغ ثابت بأصغر وحدة نقدية
+  kind        String    @default("percent")
+  value       Int
+  /// JSON: رموز الباقات المسموح بها — [] = كل الباقات
+  planCodes   String    @default("[]")
+  /// 0 = غير محدود
+  maxUses     Int       @default(0)
+  /// يُحتسب عند تأكيد الدفع فقط
+  usedCount   Int       @default(0)
+  startsAt    DateTime?
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  payments Payment[]
+}
+
+// ──────────────────────────── الشهادات والإعدادات ────────────────────────────
+
+model Certificate {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  serial    String   @unique
+  grade     String?
+  issuedAt  DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+/// إعدادات المنصة القابلة للتعديل من لوحة الإدارة دون تغيير الكود
+model Setting {
+  key       String   @id
+  value     String
+  group     String   @default("general")
+  label     String?
+  updatedAt DateTime @updatedAt
+}

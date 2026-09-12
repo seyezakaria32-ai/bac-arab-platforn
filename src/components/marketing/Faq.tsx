@@ -1,0 +1,76 @@
+"use client";
+
+import { useState } from "react";
+import { IconChevronDown } from "@/components/ui/icons";
+
+const ITEMS = [
+  {
+    q: "متى أبدأ؟ وكم يستغرق البرنامج؟",
+    a: "تبدأ فور تفعيل حسابك، في أي يوم وأي ساعة — لا توجد دفعات ولا مواعيد ثابتة. الدروس مسجّلة ومتاحة لك بشكل دائم، فتتقدّم بالوتيرة التي تناسب برنامج مراجعتك. ولمن يريد خطة واضحة: يُنجَز البرنامج في حوالي شهرين بمعدّل درس يوميًا تقريبًا.",
+  },
+  {
+    q: "هل أستطيع فتح كل الدروس مباشرة بعد التسجيل؟",
+    a: "لا. البرنامج يعتمد التدرّج الإجباري: تُفتح لك الدروس واحدًا تلو الآخر بعد إتمام السابق، وفي نهاية كل وحدة تجتاز اختبارًا قصيرًا قبل فتح الوحدة التالية. هذا النظام مقصود، لأنه يمنع القفز فوق الأساسيات ويضمن ترسيخ المنهجية.",
+  },
+  {
+    q: "ماذا يحدث إذا خرجت من المنصّة ثم عدت لاحقًا؟",
+    a: "يُحفظ تقدّمك تلقائيًا في حسابك. عند عودتك تجد زر «متابعة التعلّم» يعيدك مباشرة إلى الدرس الذي توقّفت عنده.",
+  },
+  {
+    q: "ما الفرق بين باقة START وباقة PREMIUM ELITE؟",
+    a: "باقة START تمنحك كامل الدروس المسجّلة واختبارات الوحدات وملفات الدروس الأساسية وإثبات إتمام البرنامج. أمّا PREMIUM ELITE فتضيف تمارين وتصحيحات إضافية، نماذج امتحانات حصرية، موارد وملفات خاصة، اختبارات أكثر تقدّمًا، تصحيح أعمالك، ومساحة دعم ومتابعة خاصة.",
+  },
+  {
+    q: "ماذا لو لم أنجح في اختبار الوحدة؟",
+    a: "لا مشكلة إطلاقًا. تظهر لك رسالة تدعوك إلى مراجعة الدروس، ويمكنك إعادة المحاولة. الهدف من الاختبار هو التأكد من استيعابك، وليس إقصاؤك.",
+  },
+  {
+    q: "كيف أدفع رسوم التسجيل؟",
+    a: "يمكنك الدفع عبر Wave أو Orange Money أو بطاقة بنكية. وإن اخترت التحويل اليدوي، ترفع صورة الإيصال ويُفعَّل حسابك بعد التحقّق. لا يُفتح المحتوى قبل تأكيد الدفع.",
+  },
+  {
+    q: "هل أحصل على شهادة في نهاية البرنامج؟",
+    a: "نعم، بعد إتمام جميع الدروس واجتياز اختبارات الوحدات تحصل على إثبات إتمام البرنامج في صفحة حسابك.",
+  },
+];
+
+export function Faq() {
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-3">
+      {ITEMS.map((item, i) => {
+        const isOpen = open === i;
+        return (
+          <div
+            key={item.q}
+            className={`overflow-hidden rounded-2xl border bg-white transition-colors ${
+              isOpen ? "border-brand-300" : "border-cream-300"
+            }`}
+          >
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center gap-3 px-5 py-4 text-right transition-colors hover:bg-cream-50"
+            >
+              <IconChevronDown
+                className={`shrink-0 text-lg text-ink-500 transition-transform duration-300 ${
+                  isOpen ? "rotate-180" : ""
+                }`}
+              />
+              <span className="flex-1 font-display text-[15px] font-bold text-ink-900">
+                {item.q}
+              </span>
+            </button>
+            {isOpen && (
+              <p className="border-t border-cream-200 px-5 py-4 text-[14px] leading-loose text-ink-700">
+                {item.a}
+              </p>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

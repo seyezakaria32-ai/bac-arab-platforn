@@ -1,0 +1,23 @@
+﻿node_modules/
+.next/
+out/
+build/
+.DS_Store
+*.pem
+
+.env
+.env*.local
+
+# Ù‚Ø§Ø¹Ø¯Ø© Ø¨ÙŠØ§Ù†Ø§Øª Ø§Ù„ØªØ·ÙˆÙŠØ± Ø§Ù„Ù…Ø­Ù„ÙŠ
+prisma/dev.db
+prisma/dev.db-journal
+*.db
+
+# Ø§Ù„Ù…Ù„ÙØ§Øª Ø§Ù„Ù…Ø±ÙÙˆØ¹Ø© Ù…Ø­Ù„ÙŠÙ‹Ø§
+/uploads/*
+!/uploads/.gitkeep
+
+npm-debug.log*
+yarn-error.log*
+next-env.d.ts
+tsconfig.tsbuildinfo

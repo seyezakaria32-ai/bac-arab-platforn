@@ -1,0 +1,43 @@
+{
+  "name": "bac-arabe-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "منصة Bac Arabe Sénégal التعليمية - الدليل الشامل لمنهجية الإجابة في التاريخ والجغرافيا",
+  "scripts": {
+    "dev": "next dev",
+    "build": "prisma generate && next build",
+    "start": "prisma db push --skip-generate --accept-data-loss && next start",
+    "lint": "next lint",
+    "db:push": "prisma db push",
+    "db:use-sqlite": "node scripts/switch-db.mjs sqlite",
+    "db:use-postgres": "node scripts/switch-db.mjs postgresql",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "postinstall": "prisma generate"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.3.1",
+    "bcryptjs": "^2.4.3",
+    "jose": "^5.9.6",
+    "next": "15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.0.0",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "prisma": "^6.3.1",
+    "tailwindcss": "^4.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
