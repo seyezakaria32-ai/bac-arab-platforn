@@ -1,3 +1,4 @@
+import { bictorysProvider } from "./bictorys";
 import { waveProvider } from "./wave";
 import { orangeMoneyProvider } from "./orange-money";
 import { cmiProvider } from "./cmi";
@@ -8,6 +9,7 @@ export * from "./types";
 
 /** سجلّ البوابات — أضف بوابة جديدة هنا فقط */
 const REGISTRY: Record<string, PaymentProvider> = {
+  [bictorysProvider.id]: bictorysProvider,
   [waveProvider.id]: waveProvider,
   [orangeMoneyProvider.id]: orangeMoneyProvider,
   [cmiProvider.id]: cmiProvider,

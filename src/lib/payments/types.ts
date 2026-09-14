@@ -37,6 +37,9 @@ export type WebhookResult = {
   providerRef: string | null;
   /** paid | failed | pending */
   status: "paid" | "failed" | "pending";
+  /** المبلغ كما أعلنته البوابة — يُقارَن بالمخزَّن قبل التفعيل */
+  amountCents?: number;
+  currency?: string;
   raw: unknown;
 };
 

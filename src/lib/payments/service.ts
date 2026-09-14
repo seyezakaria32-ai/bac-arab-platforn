@@ -168,6 +168,8 @@ export async function applyWebhookResult(result: {
   reference: string | null;
   providerRef: string | null;
   status: "paid" | "failed" | "pending";
+  amountCents?: number;
+  currency?: string;
   raw: unknown;
 }) {
   if (!result.reference) return { handled: false, reason: "لا يوجد مرجع" };
@@ -176,6 +178,24 @@ export async function applyWebhookResult(result: {
     where: { reference: result.reference },
   });
   if (!payment) return { handled: false, reason: "عملية غير معروفة" };
+
+  // البوابة قد تُعلن مبلغًا مختلفًا عن مبلغ العملية المخزَّن عندنا.
+  // لا نفعّل الاشتراك حينها مهما كانت حالة الدفع، بل نحوّلها للمراجعة.
+  if (
+    typeof result.amountCents === "number" &&
+    result.amountCents !== payment.amountCents
+  ) {
+    await db.payment.update({
+      where: { id: payment.id },
+      data: {
+        status: PAYMENT_STATUS.AWAITING_REVIEW,
+        adminNote:
+          `المبلغ الوارد من البوابة (${result.amountCents}) لا يطابق مبلغ العملية (${payment.amountCents}) — يحتاج مراجعة يدوية`,
+        rawPayload: JSON.stringify(result.raw),
+      },
+    });
+    return { handled: false, reason: "المبلغ لا يطابق مبلغ العملية" };
+  }
 
   const settings = await getSettings();
 
