@@ -289,7 +289,7 @@ export default async function LandingPage() {
             <div className="mt-7 grid gap-3 sm:grid-cols-2">
               {[
                 { k: "بداية الدراسة", v: "فور التسجيل" },
-                { k: "مدّة الوصول", v: "دائم — شاهد متى شئت" },
+                { k: "مدّة الوصول", v: "طوال موسم البكالوريا" },
                 { k: "الوتيرة المقترحة", v: BRAND.duration },
                 { k: "الفئة المستهدفة", v: BRAND.audience },
               ].map((item) => (
@@ -522,6 +522,11 @@ export default async function LandingPage() {
                     <span className="num font-display text-4xl font-black text-ink-900">
                       {formatPrice(plan.priceCents, plan.currency)}
                     </span>
+                    {plan.durationDays > 0 && (
+                      <span className="mb-1.5 text-sm font-bold text-ink-500">
+                        / شهريًا
+                      </span>
+                    )}
                     {plan.comparePriceCents && (
                       <span className="num mb-1.5 text-sm text-ink-500 line-through">
                         {formatPrice(plan.comparePriceCents, plan.currency)}
@@ -529,7 +534,9 @@ export default async function LandingPage() {
                     )}
                   </div>
                   <p className="mt-1 text-[12.5px] text-ink-500">
-                    دفعة واحدة · وصول دائم إلى محتوى البرنامج
+                    {plan.durationDays > 0
+                      ? "اشتراك شهري · جدّده متى شئت، وتقدّمك محفوظ"
+                      : "دفعة واحدة · وصول طوال موسم البكالوريا"}
                   </p>
 
                   <LinkButton

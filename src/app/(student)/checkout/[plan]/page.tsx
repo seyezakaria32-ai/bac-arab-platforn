@@ -7,6 +7,8 @@ import { getDefaultCourse } from "@/lib/curriculum";
 import { getAccess } from "@/lib/access";
 import { availableProviders } from "@/lib/payments";
 import { formatPrice, planFeatures } from "@/lib/payments/service";
+import { formatDate } from "@/lib/format";
+import { nextPeriod } from "@/lib/subscription-period";
 import { Badge, LinkButton, Alert } from "@/components/ui";
 import {
   IconCheck,
@@ -48,6 +50,20 @@ export default async function CheckoutPage({
   const providers = availableProviders();
   const isPremium = plan.code === "PREMIUM_ELITE";
 
+  // تجديد الاشتراك الشهري: الطالب مشترك في نفس الباقة وما زال وصوله قائمًا
+  const renewing =
+    access.hasAccess &&
+    !access.isAdmin &&
+    access.planCode === plan.code &&
+    plan.durationDays > 0;
+  const renewedUntil = renewing
+    ? nextPeriod({
+        durationDays: plan.durationDays,
+        planId: plan.id,
+        current: { planId: plan.id, status: "active", expiresAt: access.expiresAt },
+      }).expiresAt
+    : null;
+
   /* ── عاد من بوابة الدفع ── */
   const returned = status === "success" || status === "cancelled";
   const payment = ref
@@ -55,7 +71,7 @@ export default async function CheckoutPage({
     : null;
 
   /* ── مشترك بالفعل في نفس الباقة أو أعلى ── */
-  if (access.hasAccess && access.planCode === plan.code) {
+  if (access.hasAccess && access.planCode === plan.code && plan.durationDays === 0) {
     return (
       <div className="container-page max-w-xl py-16">
         <div className="card p-8 text-center">
@@ -90,8 +106,20 @@ export default async function CheckoutPage({
         إتمام الاشتراك
       </h1>
       <p className="mt-1.5 text-[14px] text-ink-500">
-        خطوة أخيرة — بعد تأكيد الدفع يُفتح البرنامج كاملًا في حسابك.
+        {renewing
+          ? "جدّد اشتراكك قبل انتهائه — تُضاف المدّة الجديدة إلى نهاية شهرك الحالي."
+          : "خطوة أخيرة — بعد تأكيد الدفع يُفتح البرنامج كاملًا في حسابك."}
       </p>
+
+      {renewing && access.expiresAt && renewedUntil && (
+        <div className="mt-5">
+          <Alert tone="info" title="تجديد الاشتراك الشهري">
+            اشتراكك الحالي فعّال حتى <strong>{formatDate(access.expiresAt)}</strong>.
+            بعد الدفع يمتدّ حتى <strong>{formatDate(renewedUntil)}</strong> دون أن
+            تخسر أي يوم.
+          </Alert>
+        </div>
+      )}
 
       {returned && (
         <div className="mt-5">
@@ -165,7 +193,10 @@ export default async function CheckoutPage({
                 )}
               </div>
               <p className="mt-1 text-[12px] text-ink-500">
-                دفعة واحدة · {course.title}
+                {plan.durationDays > 0
+                  ? "اشتراك شهري (" + plan.durationDays + " يومًا)"
+                  : "دفعة واحدة"}{" "}
+                · {course.title}
               </p>
             </div>
 

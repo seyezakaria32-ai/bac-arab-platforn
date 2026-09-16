@@ -749,7 +749,7 @@ async function main() {
       priceCents: 750000, // 7,500 XOF — سعر الإطلاق
       comparePriceCents: 1000000, // 10,000 XOF
       currency: "XOF",
-      durationDays: 0,
+      durationDays: 0, // الوصول حتى نهاية موسم البكالوريا (access.seasonEnd)
       order: 1,
       badge: "سعر الإطلاق",
       features: JSON.stringify([
@@ -789,7 +789,7 @@ async function main() {
       priceCents: 2500000, // 25,000 XOF
       comparePriceCents: 3000000, // 30,000 XOF
       currency: "XOF",
-      durationDays: 0,
+      durationDays: 0, // الوصول حتى نهاية موسم البكالوريا (access.seasonEnd)
       order: 2,
       badge: "الأكثر اختيارًا",
       isHighlighted: true,

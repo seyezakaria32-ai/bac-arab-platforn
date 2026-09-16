@@ -5,6 +5,7 @@ import { getCurriculum, type ModuleNode } from "@/lib/curriculum";
 import { getSettings } from "@/lib/settings";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
+import { daysLeft } from "@/lib/subscription-period";
 import {
   Badge,
   LinkButton,
@@ -62,6 +63,7 @@ export default async function DashboardPage() {
 
   /* ═════════ الحالة الأولى: لا اشتراك نشِط ═════════ */
   if (!access.hasAccess) {
+    const expired = access.status === "expired";
     const pending = await db.payment.findFirst({
       where: { userId: user.id, status: { in: ["pending", "awaiting_review"] } },
       orderBy: { createdAt: "desc" },
@@ -79,8 +81,9 @@ export default async function DashboardPage() {
               مرحبًا {user.name.split(" ")[0]} 👋
             </h1>
             <p className="mx-auto mt-2 max-w-md leading-relaxed text-brand-50/85">
-              حسابك جاهز، لكن محتوى البرنامج لم يُفعَّل بعد. اختر باقتك وأتمّ
-              عملية الدفع ليُفتح لك البرنامج كاملًا.
+              {expired
+                ? "انتهى وصولك لموسم البكالوريا السابق. اشترك للموسم الجديد لتتابع من حيث توقّفت — تقدّمك ونتائج اختباراتك محفوظة."
+                : "حسابك جاهز، لكن محتوى البرنامج لم يُفعَّل بعد. اختر باقتك وأتمّ عملية الدفع ليُفتح لك البرنامج كاملًا."}
             </p>
           </div>
 
@@ -108,11 +111,15 @@ export default async function DashboardPage() {
             <div className="grid gap-3 sm:grid-cols-3">
               <StatCard label="الوحدات" value={6} hint="٣ في كل مادة" />
               <StatCard label="الدروس" value={curriculum.totalLessons} />
-              <StatCard label="الوصول" value="دائم" hint="ابدأ متى شئت" />
+              <StatCard label="الوصول" value="موسم كامل" hint="دفعة واحدة" />
             </div>
 
-            <LinkButton href="/#plans" size="lg" className="w-full">
-              اختر باقتك وابدأ البرنامج
+            <LinkButton
+              href={expired && access.planCode ? "/checkout/" + access.planCode : "/#plans"}
+              size="lg"
+              className="w-full"
+            >
+              {expired ? "اشترك للموسم الجديد" : "اختر باقتك وابدأ البرنامج"}
               <IconArrowNext className="text-lg" />
             </LinkButton>
 
@@ -131,6 +138,7 @@ export default async function DashboardPage() {
   const current = curriculum.currentLesson;
   const pendingQuiz = curriculum.pendingQuiz;
   const isPremium = access.planCode === "PREMIUM_ELITE";
+  const remaining = access.isAdmin ? null : daysLeft(access.expiresAt);
 
   const attempts = await db.quizAttempt.findMany({
     where: { userId: user.id, submittedAt: { not: null } },
@@ -141,6 +149,20 @@ export default async function DashboardPage() {
 
   return (
     <div className="container-page space-y-8 py-8 sm:py-10">
+      {remaining !== null && remaining <= 5 && (
+        <Alert
+          tone="warning"
+          title={
+            remaining === 0
+              ? "ينتهي وصولك اليوم"
+              : "ينتهي وصولك خلال " + remaining + (remaining === 1 ? " يوم" : " أيام")
+          }
+        >
+          ينتهي وصولك مع نهاية موسم البكالوريا. استثمر ما تبقّى في مراجعة
+          الوحدات التي تحتاجها — بالتوفيق في امتحانك.
+        </Alert>
+      )}
+
       {/* ── ترويسة الطالب ── */}
       <section className="card overflow-hidden">
         <div className="brand-gradient brand-texture px-5 py-6 text-white sm:px-8 sm:py-7">
@@ -168,6 +190,12 @@ export default async function DashboardPage() {
                     {isPremium ? "PREMIUM ELITE" : "START"}
                   </Badge>
                 </p>
+                {remaining !== null && access.expiresAt && (
+                  <p className="mt-1 text-[12px] text-brand-100/75">
+                    وصولك فعّال حتى {formatDate(access.expiresAt)} ·{" "}
+                    <span className="num">{remaining}</span> يومًا متبقّيًا
+                  </p>
+                )}
               </div>
             </div>
 

@@ -2,6 +2,7 @@ import "server-only";
 import { db, parseJson } from "../db";
 import { PAYMENT_STATUS, SUBSCRIPTION_STATUS } from "../constants";
 import { getSettings } from "../settings";
+import { nextPeriod } from "../subscription-period";
 
 /**
  * منطق الأعمال للدفع والاشتراك — مستقل تمامًا عن البوابة المستعملة.
@@ -50,7 +51,18 @@ export async function initiatePayment(params: {
 
   const reference = newReference();
 
-  const subscription = await db.subscription.upsert({
+  // اشتراك فعّال لا يُمسّ حين يبدأ الطالب التجديد: يبقى وصوله قائمًا حتى
+  // يُؤكَّد الدفع. تحويله إلى «معلّق» هنا كان يقفل البرنامج قبل أن يدفع.
+  const existing = await db.subscription.findUnique({
+    where: {
+      userId_courseId: { userId: params.userId, courseId: params.courseId },
+    },
+  });
+
+  const subscription =
+    existing && existing.status === SUBSCRIPTION_STATUS.ACTIVE
+      ? existing
+      : await db.subscription.upsert({
     where: {
       userId_courseId: { userId: params.userId, courseId: params.courseId },
     },
@@ -101,10 +113,19 @@ export async function activateSubscription(
   if (payment.status === PAYMENT_STATUS.PAID) return payment;
 
   const now = new Date();
-  const expiresAt =
-    payment.plan.durationDays > 0
-      ? new Date(now.getTime() + payment.plan.durationDays * 86400_000)
-      : null;
+  const current = await db.subscription.findUnique({
+    where: {
+      userId_courseId: { userId: payment.userId, courseId: payment.courseId },
+    },
+  });
+  // الوصول حتى نهاية موسم البكالوريا (أو بالأيام إن كانت للباقة مدّة)
+  const { expiresAt, extended } = nextPeriod({
+    durationDays: payment.plan.durationDays,
+    planId: payment.planId,
+    current,
+    now,
+    seasonEnd: (await getSettings())["access.seasonEnd"],
+  });
 
   const [updated] = await db.$transaction([
     db.payment.update({
@@ -127,7 +148,7 @@ export async function activateSubscription(
       update: {
         planId: payment.planId,
         status: SUBSCRIPTION_STATUS.ACTIVE,
-        startedAt: now,
+        startedAt: extended && current?.startedAt ? current.startedAt : now,
         expiresAt,
       },
       create: {

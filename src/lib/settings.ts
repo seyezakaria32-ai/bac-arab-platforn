@@ -23,6 +23,8 @@ export type SettingsMap = {
   "payment.autoActivate": boolean;
   "payment.manualEnabled": boolean;
   "site.registrationOpen": boolean;
+  /** نهاية موسم البكالوريا YYYY-MM-DD — تنتهي عنده صلاحية كل دفعة (فارغ = وصول دائم) */
+  "access.seasonEnd": string;
   "site.whatsapp": string;
   "site.telegram": string;
   "site.supportEmail": string;
@@ -67,6 +69,7 @@ export const DEFAULT_SETTINGS: SettingsMap = {
 
   // ── الموقع ──
   "site.registrationOpen": true,
+  "access.seasonEnd": "2027-07-31", // نهاية امتحانات بكالوريا 2027 — تُعدَّل من الإعدادات
   "site.whatsapp": "+212632092292",
   "site.telegram": "",
   "site.supportEmail": "contact@bacarabe.sn",

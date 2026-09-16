@@ -8,6 +8,7 @@ import { getSettings, setSetting } from "@/lib/settings";
 import { activateSubscription, failPayment } from "@/lib/payments/service";
 import { saveUpload, UploadError } from "@/lib/storage";
 import { toEmbed } from "@/lib/video";
+import { nextPeriod } from "@/lib/subscription-period";
 import { ROLES, SUBSCRIPTION_STATUS } from "@/lib/constants";
 
 /**
@@ -580,17 +581,22 @@ export async function grantSubscriptionAction(
   const plan = await db.plan.findUnique({ where: { code: planCode } });
   if (!plan) return { ok: false, message: "الباقة غير موجودة" };
 
-  const expiresAt =
-    plan.durationDays > 0
-      ? new Date(Date.now() + plan.durationDays * 86_400_000)
-      : null;
+  const current = await db.subscription.findUnique({
+    where: { userId_courseId: { userId, courseId } },
+  });
+  const { expiresAt, extended } = nextPeriod({
+    durationDays: plan.durationDays,
+    planId: plan.id,
+    current,
+    seasonEnd: (await getSettings())["access.seasonEnd"],
+  });
 
   await db.subscription.upsert({
     where: { userId_courseId: { userId, courseId } },
     update: {
       planId: plan.id,
       status: SUBSCRIPTION_STATUS.ACTIVE,
-      startedAt: new Date(),
+      startedAt: extended && current?.startedAt ? current.startedAt : new Date(),
       expiresAt,
     },
     create: {
@@ -969,7 +975,7 @@ export async function saveSettingsAction(
     "site.registrationOpen",
   ];
   const numbers = ["quiz.defaultPassScore", "certificate.minCompletion"];
-  const strings = ["site.whatsapp", "site.supportEmail"];
+  const strings = ["site.whatsapp", "site.supportEmail", "access.seasonEnd"];
 
   for (const key of booleans) {
     await setSetting(key, bool(formData.get(key)), key.split(".")[0]);

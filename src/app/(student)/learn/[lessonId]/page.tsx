@@ -66,7 +66,9 @@ export default async function LessonPage({
           </h1>
           <p className="mx-auto mt-2 max-w-md text-[14px] leading-loose text-ink-500">
             {node.lockReason === "subscription"
-              ? "يجب تفعيل اشتراكك في البرنامج قبل الوصول إلى الدروس."
+              ? curriculum.access.status === "expired"
+                ? "انتهى وصولك لموسم البكالوريا السابق. اشترك للموسم الجديد لتتابع من حيث توقّفت — تقدّمك محفوظ."
+                : "يجب تفعيل اشتراكك في البرنامج قبل الوصول إلى الدروس."
               : node.lockReason === "plan"
                 ? "هذا المحتوى متاح في باقة PREMIUM ELITE فقط."
                 : `البرنامج يعتمد التدرّج الإجباري — أتمّ الدروس السابقة${
@@ -76,8 +78,15 @@ export default async function LessonPage({
           <div className="mt-6 flex flex-col justify-center gap-2 sm:flex-row">
             <LinkButton href="/dashboard">العودة إلى لوحتي</LinkButton>
             {node.lockReason === "subscription" && (
-              <LinkButton href="/#plans" variant="outline">
-                عرض الباقات
+              <LinkButton
+                href={
+                  curriculum.access.status === "expired" && curriculum.access.planCode
+                    ? "/checkout/" + curriculum.access.planCode
+                    : "/#plans"
+                }
+                variant="outline"
+              >
+                {curriculum.access.status === "expired" ? "اشترك للموسم الجديد" : "عرض الباقات"}
               </LinkButton>
             )}
             {node.lockReason === "plan" && (

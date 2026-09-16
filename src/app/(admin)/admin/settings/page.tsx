@@ -134,6 +134,14 @@ export default async function AdminSettingsPage() {
           </h2>
           <div className="mt-4 space-y-4">
             <Field
+              label="نهاية موسم البكالوريا (نهاية الوصول)"
+              name="access.seasonEnd"
+              type="date"
+              dir="ltr"
+              defaultValue={s["access.seasonEnd"]}
+              hint="كل دفعة تفتح البرنامج حتى هذا التاريخ. من يدفع بعده يحصل تلقائيًا على الموسم التالي. تغييره يسري على الدفعات الجديدة فقط."
+            />
+            <Field
               label="رقم واتساب"
               name="site.whatsapp"
               dir="ltr"
