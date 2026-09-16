@@ -2,6 +2,9 @@
   "name": "bac-arabe-platform",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": "22.x"
+  },
   "description": "منصة Bac Arabe Sénégal التعليمية - الدليل الشامل لمنهجية الإجابة في التاريخ والجغرافيا",
   "scripts": {
     "dev": "next dev",
