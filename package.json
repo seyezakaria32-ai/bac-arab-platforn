@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && next build",
-    "start": "prisma db push --skip-generate --accept-data-loss && next start",
+    "start": "node scripts/start.mjs",
     "lint": "next lint",
     "db:push": "prisma db push",
     "db:use-sqlite": "node scripts/switch-db.mjs sqlite",
