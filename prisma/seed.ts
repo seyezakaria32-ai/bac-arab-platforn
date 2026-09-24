@@ -733,7 +733,24 @@ function slugify(prefix: string, i: number) {
   return `${prefix}-${String(i).padStart(2, "0")}`;
 }
 
+/**
+ * القيم الافتراضية للتطوير وحده. على خادم حقيقي نرفض البذر بلا كلمة مرور
+ * صريحة: كلمة "Admin@2026" مكتوبة في المستودع، وحساب مسؤول بها على موقع
+ * منشور بابٌ مفتوح لكلّ من اطّلع على الكود.
+ */
+const isProduction = process.env.NODE_ENV === "production";
+
 async function main() {
+  // الفحص قبل أيّ كتابة: البذر يحذف المسارات والدروس ثمّ يعيد بناءها،
+  // فالتوقّف في منتصفه يترك القاعدة ناقصة بلا حساب مسؤول.
+  if (isProduction && !process.env.ADMIN_PASSWORD) {
+    console.error(
+      "\n❌ ADMIN_PASSWORD غير مضبوط على خادم الإنتاج.\n" +
+        "   أضفه في متغيّرات الاستضافة (كلمة مرور قويّة جديدة) ثمّ أعد تشغيل البذر.\n",
+    );
+    process.exit(1);
+  }
+
   console.log("🌱 بدء بذر قاعدة البيانات…");
 
   // ── الباقات ──
@@ -968,32 +985,42 @@ async function main() {
       role: "admin",
     },
   });
-  console.log(`  ✓ المسؤول: ${adminEmail} / ${adminPassword}`);
+  // لا نطبع كلمة مرور الإنتاج: سجلّات الاستضافة تُحفَظ وتُشارَك
+  console.log(
+    isProduction
+      ? `  ✓ المسؤول: ${adminEmail} (كلمة المرور من ADMIN_PASSWORD)`
+      : `  ✓ المسؤول: ${adminEmail} / ${adminPassword}`,
+  );
 
   // ── طالب تجريبي باشتراك نشِط ──
-  const demo = await db.user.upsert({
-    where: { email: "student@bacarabe.sn" },
-    update: {},
-    create: {
-      email: "student@bacarabe.sn",
-      name: "أمينة ديوب",
-      phone: "+221770000000",
-      passwordHash: await bcrypt.hash("Student@2026", 12),
-      role: "student",
-    },
-  });
-  await db.subscription.upsert({
-    where: { userId_courseId: { userId: demo.id, courseId: course.id } },
-    update: { status: "active", planId: premiumPlan.id, startedAt: new Date() },
-    create: {
-      userId: demo.id,
-      courseId: course.id,
-      planId: premiumPlan.id,
-      status: "active",
-      startedAt: new Date(),
-    },
-  });
-  console.log("  ✓ طالب تجريبي: student@bacarabe.sn / Student@2026");
+  // كلمة مروره معروفة في الكود، فلا يُنشأ على الإنتاج إلا بطلب صريح
+  if (!isProduction || process.env.SEED_DEMO === "1") {
+    const demo = await db.user.upsert({
+      where: { email: "student@bacarabe.sn" },
+      update: {},
+      create: {
+        email: "student@bacarabe.sn",
+        name: "أمينة ديوب",
+        phone: "+221770000000",
+        passwordHash: await bcrypt.hash("Student@2026", 12),
+        role: "student",
+      },
+    });
+    await db.subscription.upsert({
+      where: { userId_courseId: { userId: demo.id, courseId: course.id } },
+      update: { status: "active", planId: premiumPlan.id, startedAt: new Date() },
+      create: {
+        userId: demo.id,
+        courseId: course.id,
+        planId: premiumPlan.id,
+        status: "active",
+        startedAt: new Date(),
+      },
+    });
+    console.log("  ✓ طالب تجريبي: student@bacarabe.sn / Student@2026");
+  } else {
+    console.log("  — تُخطّي الطالب التجريبي (إنتاج)");
+  }
 
   // ── الإعدادات الافتراضية ──
   const settings: [string, unknown, string][] = [

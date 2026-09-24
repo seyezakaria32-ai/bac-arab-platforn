@@ -1,5 +1,6 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { chmodSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 /**
@@ -24,6 +25,25 @@ const fail = (message) => {
   console.error("\n✖ تعذّر تشغيل المنصّة: " + message + "\n");
   process.exit(1);
 };
+
+/* ── قراءة ملفّ .env محلّيًا ── */
+/**
+ * على الاستضافة تأتي المتغيّرات من اللوحة مباشرة. أمّا محلّيًا فهي في .env،
+ * وNext يقرأه بنفسه لكن هذا السكربت يفحص المتغيّرات قبل تشغيل Next، فنقرأه
+ * هنا أيضًا حتى ينجح `npm start` على الحاسوب كما ينجح على الخادم.
+ * متغيّرات البيئة الحقيقية لها الأولوية دائمًا.
+ */
+const envFile = path.join(process.cwd(), ".env");
+if (existsSync(envFile)) {
+  for (const line of readFileSync(envFile, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const eq = trimmed.indexOf("=");
+    if (eq < 1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    if (process.env[key] === undefined) process.env[key] = clean(trimmed.slice(eq + 1));
+  }
+}
 
 /* ── قاعدة البيانات ── */
 let dbUrl = clean(process.env.DATABASE_URL);
@@ -90,12 +110,68 @@ for (const key of [
   if (process.env[key]) process.env[key] = clean(process.env[key]);
 }
 
-if (!clean(process.env.AUTH_SECRET)) {
+/* ── مفتاح توقيع الجلسات ── */
+/**
+ * الأفضل ضبط AUTH_SECRET في لوحة الاستضافة. لكنّ نسيانه كان يوقف الإقلاع
+ * كليًّا، فصرنا نولّد مفتاحًا قويًّا ونحفظه على القرص الدائم بجوار قاعدة
+ * البيانات. حفظه ضروري لا تحسينًا: مفتاح مؤقّت في الذاكرة يتغيّر مع كل إعادة
+ * تشغيل، فيُخرج كل الطلبة من حساباتهم في كل مرّة.
+ */
+const SECRET_FILE = ".auth-secret";
+
+const stateDir = dbUrl.startsWith("file:")
+  ? path.dirname(dbUrl.slice("file:".length))
+  : storageDir;
+
+const loadOrCreateSecret = () => {
+  if (!stateDir || stateDir === ".") return "";
+  const file = path.join(stateDir, SECRET_FILE);
+  try {
+    if (existsSync(file)) {
+      const saved = readFileSync(file, "utf8").trim();
+      if (saved.length >= 32) return saved;
+    }
+    const fresh = randomBytes(48).toString("base64url");
+    writeFileSync(file, fresh + "\n", { mode: 0o600 });
+    try {
+      chmodSync(file, 0o600); // الملف الموجود مسبقًا لا يتأثّر بـ mode أعلاه
+    } catch {
+      /* ويندوز لا يدعم صلاحيات POSIX — غير مهمّ محلّيًا */
+    }
+    return fresh;
+  } catch (e) {
+    console.warn("[start] تعذّر حفظ مفتاح الجلسات في " + file + ": " + e.message);
+    return "";
+  }
+};
+
+let authSecret = clean(process.env.AUTH_SECRET);
+
+if (authSecret && authSecret.length < 16) {
   fail(
-    "المتغيّر AUTH_SECRET غير مضبوط — لا يمكن توقيع جلسات الدخول.\n" +
-      '  ولّد مفتاحًا:  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"',
+    "قيمة AUTH_SECRET قصيرة جدًا (" + authSecret.length + " حرفًا) — المطلوب 16 على الأقلّ.\n" +
+      "  احذف المتغيّر ليولّد الخادم مفتاحًا قويًّا تلقائيًا، أو ضع مفتاحًا طويلًا.",
   );
 }
+
+if (!authSecret) {
+  authSecret = loadOrCreateSecret();
+  if (!authSecret) {
+    fail(
+      "المتغيّر AUTH_SECRET غير مضبوط، وتعذّر توليد مفتاح دائم بديل.\n" +
+        '  ولّد مفتاحًا:  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"' +
+        "\n  ثم أضفه في إعدادات الاستضافة باسم AUTH_SECRET (بلا تنصيص).",
+    );
+  }
+  console.warn(
+    "[start] AUTH_SECRET غير مضبوط — استُعمل مفتاح محفوظ في " +
+      path.join(stateDir, SECRET_FILE) +
+      "\n        يعمل الموقع طبيعيًا، لكنّ المفتاح يعيش مع القرص الدائم:" +
+      "\n        إن حُذف القرص خرج كل الطلبة من حساباتهم ولزمهم تسجيل دخول جديد.",
+  );
+}
+
+process.env.AUTH_SECRET = authSecret;
 
 /* ── تهيئة الجداول ثم تشغيل الخادم ── */
 /**
