@@ -211,10 +211,13 @@ export async function getCurriculum(
     quizStats.set(a.quizId, s);
   }
 
-  const sequential = settings["learning.sequential"];
-  const acrossTracks = settings["learning.sequentialAcrossTracks"];
-  const requireQuiz = settings["learning.requireQuizToAdvance"];
-  const allowRewatch = settings["learning.allowRewatch"];
+  // المسؤول يراجع المحتوى ولا يتعلّمه: التدرّج الإجباري لا يسري عليه، وإلا
+  // لم يستطع معاينة درس من لوحة الإدارة قبل «إتمام» كل ما قبله
+  const preview = access.isAdmin;
+  const sequential = settings["learning.sequential"] && !preview;
+  const acrossTracks = settings["learning.sequentialAcrossTracks"] && !preview;
+  const requireQuiz = settings["learning.requireQuizToAdvance"] && !preview;
+  const allowRewatch = settings["learning.allowRewatch"] || preview;
 
   const tracks: TrackNode[] = [];
   const flatLessons: LessonNode[] = [];
@@ -318,8 +321,10 @@ export async function getCurriculum(
           mod.quiz.maxAttempts > 0
             ? Math.max(0, mod.quiz.maxAttempts - stats.count)
             : null;
-        const quizAccessible: boolean =
-          moduleAccessible && quizPlanOk && lessonsDone && !stats.passed
+        // المسؤول يعاين الاختبار دون إتمام دروس الوحدة
+        const quizAccessible: boolean = preview
+          ? true
+          : moduleAccessible && quizPlanOk && lessonsDone && !stats.passed
             ? attemptsLeft === null || attemptsLeft > 0
             : moduleAccessible && quizPlanOk && lessonsDone;
 
