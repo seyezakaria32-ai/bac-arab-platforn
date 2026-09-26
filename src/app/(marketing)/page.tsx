@@ -151,8 +151,11 @@ export default async function LandingPage() {
               </LinkButton>
             </div>
 
-            {/* أزرار من لوحة الإدارة، الموضع «داخل الواجهة الأولى» */}
-            <BlockSlot bare dark align="start" blocks={blocks["home.hero"]} className="mt-9" />
+            {/* أزرار من لوحة الإدارة، الموضع «داخل الواجهة الأولى».
+                على الحاسوب تحت زرَّي البداية مباشرة. على الهاتف يمتدّ الزرّان
+                بعرض الشاشة، فيبدو زرّ أقصر بجانبهما ملتصقًا بطرف الصفحة —
+                فيُعرض هناك بعد الأرقام، في منتصف السطر. */}
+            <BlockSlot bare dark align="start" blocks={blocks["home.hero"]} className="mt-9 hidden sm:block" />
 
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-white/15 pt-6">
               {[
@@ -168,6 +171,8 @@ export default async function LandingPage() {
                 </div>
               ))}
             </dl>
+
+            <BlockSlot bare dark blocks={blocks["home.hero"]} className="mt-10 sm:hidden" />
           </div>
 
           {/* بطاقة الأستاذ */}
@@ -419,7 +424,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterLearn"]} />
+      <BlockSlot tight surface="white" blocks={blocks["home.afterLearn"]} />
 
       {/* ════════════════════ المنهج الدراسي ════════════════════ */}
       <section id="curriculum" className="container-page scroll-mt-24 py-20 md:py-24">
@@ -490,7 +495,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterSteps"]} />
+      <BlockSlot tight surface="white" blocks={blocks["home.afterSteps"]} />
 
       {/* ════════════════════ الباقات ════════════════════ */}
       <section id="plans" className="container-page scroll-mt-24 py-20 md:py-24">
@@ -605,7 +610,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterFaq"]} />
+      <BlockSlot tight surface="white" blocks={blocks["home.afterFaq"]} />
 
       {/* ════════════════════ نداء أخير ════════════════════ */}
       <section className="container-page py-16">

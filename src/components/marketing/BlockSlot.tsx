@@ -17,6 +17,7 @@ export function BlockSlot({
   align = "center",
   dark = false,
   tight = false,
+  surface = "cream",
   className = "",
 }: {
   blocks?: Block[];
@@ -25,12 +26,17 @@ export function BlockSlot({
   /** خلفية الموضع داكنة (الواجهة الأولى) */
   dark?: boolean;
   /**
-   * الموضع يلي قسمًا بلون الخلفية نفسه (كريمي) وبهامش سفلي كبير: الهامشان
-   * كانا يتراكمان (96px + 48px) فيبدو الزرّ منفصلًا عمّا فوقه. نسحب الموضع
-   * إلى داخل هامش القسم السابق. لا يُستعمل بعد قسم أبيض، وإلا ظهر الزرّ
-   * نصفه على الأبيض ونصفه على الكريمي.
+   * الموضع يلي قسمًا بهامش سفلي كبير: الهامشان كانا يتراكمان (96px + 48px)
+   * فيبدو الزرّ منفصلًا عمّا فوقه. نسحب الموضع إلى داخل هامش القسم السابق.
+   * يجب أن يطابق surface لونَ ذلك القسم، وإلا ظهر الزرّ على حدّ اللونين.
    */
   tight?: boolean;
+  /**
+   * لون خلفية الموضع، مطابقًا للقسم الذي يليه الموضع: بعد قسم أبيض (الأسئلة
+   * الشائعة مثلًا) يظهر الزرّ على الأبيض امتدادًا لذلك القسم، لا في شريط
+   * كريمي منفصل بينه وبين ما بعده.
+   */
+  surface?: "cream" | "white";
   className?: string;
 }) {
   if (!blocks?.length) return null;
@@ -68,17 +74,18 @@ export function BlockSlot({
 
   // زرّ وحده لا يحتاج هوامش قسم كامل
   const onlyButtons = blocks.every((b) => b.kind === "button");
+  // الخلفية على عرض الصفحة كاملًا، والمحتوى داخل الحاوية
   return (
     <section
-      className={`container-page space-y-12 ${
-        tight
-          ? "-mt-10 pt-0 md:-mt-14"
-          : onlyButtons
-            ? "pt-10 md:pt-12"
-            : "pt-12 md:pt-16"
-      } ${onlyButtons ? "pb-10 md:pb-12" : "pb-12 md:pb-16"} ${className}`}
+      className={`${surface === "white" ? "bg-white" : ""} ${tight ? "-mt-10 md:-mt-14" : ""} ${className}`}
     >
-      {content}
+      <div
+        className={`container-page space-y-12 ${
+          tight ? "pt-0" : onlyButtons ? "pt-10 md:pt-12" : "pt-12 md:pt-16"
+        } ${onlyButtons ? "pb-10 md:pb-12" : "pb-12 md:pb-16"}`}
+      >
+        {content}
+      </div>
     </section>
   );
 }
