@@ -437,6 +437,13 @@ model Slider {
   aspect     String   @default("poster")
   autoplay   Boolean  @default(true)
   isActive   Boolean  @default(true)
+  /// زرّ اختياري تحت العارض — يظهر فقط إن ضُبط النصّ والرابط معًا
+  ctaLabel   String?
+  ctaUrl     String?
+  /// لون الزرّ: brand | gold | dark
+  ctaTone    String   @default("brand")
+  /// سطر قصير تحت الزرّ، مثل «العرض ساري حتى نهاية الشهر»
+  ctaNote    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

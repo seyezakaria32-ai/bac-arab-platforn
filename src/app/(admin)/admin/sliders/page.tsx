@@ -106,6 +106,7 @@ export default async function SlidersPage() {
                       {imagesCount(s._count.slides)} · {s.perView} معًا على الحاسوب ·{" "}
                       كل {s.intervalMs / 1000} ث · {aspect.label}
                       {!s.autoplay && " · بلا تشغيل تلقائي"}
+                      {s.ctaLabel && s.ctaUrl && ` · زرّ «${s.ctaLabel}»`}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1">

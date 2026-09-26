@@ -1,4 +1,5 @@
 import { ImageSlider } from "@/components/marketing/ImageSlider";
+import { CtaButton } from "@/components/marketing/CtaButton";
 import { aspectCss, type SliderView } from "@/lib/sliders";
 import { reveal } from "@/lib/reveal";
 
@@ -34,6 +35,7 @@ export function SliderSlot({
         autoplay={s.autoplay}
         label={s.title ?? "عارض صور"}
       />
+      {s.cta && <CtaButton cta={s.cta} />}
     </div>
   ));
 

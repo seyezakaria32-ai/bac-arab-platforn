@@ -49,6 +49,35 @@ export function imagesCount(n: number) {
   return `${n} صورة`;
 }
 
+/** ألوان زرّ الدعوة تحت العارض — التصميم في globals.css (.cta) */
+export const CTA_TONES = [
+  { key: "brand", label: "فيروزي (لون الهوية)" },
+  { key: "gold", label: "ذهبي (للعروض والباقة المميّزة)" },
+  { key: "dark", label: "داكن بإطار متلألئ" },
+] as const;
+
+export type CtaTone = (typeof CTA_TONES)[number]["key"];
+
+export const isCtaTone = (key: string): key is CtaTone => CTA_TONES.some((t) => t.key === key);
+
+export type SliderCta = { label: string; href: string; tone: CtaTone; note: string | null };
+
+/** الزرّ لا يظهر إلا مكتملًا: نصّ ورابط */
+export function toCta(s: {
+  ctaLabel: string | null;
+  ctaUrl: string | null;
+  ctaTone: string;
+  ctaNote: string | null;
+}): SliderCta | null {
+  if (!s.ctaLabel || !s.ctaUrl) return null;
+  return {
+    label: s.ctaLabel,
+    href: s.ctaUrl,
+    tone: isCtaTone(s.ctaTone) ? s.ctaTone : "brand",
+    note: s.ctaNote,
+  };
+}
+
 export const PER_VIEW_OPTIONS = [1, 2, 3, 4] as const;
 export const INTERVAL_OPTIONS_S = [1, 1.5, 2, 3, 4, 5, 7] as const;
 
@@ -61,6 +90,7 @@ export type SliderView = {
   aspect: string;
   autoplay: boolean;
   slides: { id: string; src: string; alt: string; href: string | null }[];
+  cta: SliderCta | null;
 };
 
 /**
@@ -114,6 +144,7 @@ export async function getSlidersByPlacement(
       intervalMs: s.intervalMs,
       aspect: s.aspect,
       autoplay: s.autoplay,
+      cta: toCta(s),
       slides: s.slides.map((sl) => ({
         id: sl.id,
         src: sl.imageUrl,

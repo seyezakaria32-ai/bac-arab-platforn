@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { saveUpload, UploadError } from "@/lib/storage";
 import { ROLES } from "@/lib/constants";
 import {
+  isCtaTone,
   isPlacement,
   PER_VIEW_OPTIONS,
   SLIDER_ASPECTS,
@@ -108,6 +109,25 @@ export async function saveSliderAction(
     return { ok: false, message: "اختر شكل الإطار من القائمة" };
   }
 
+  // زرّ الدعوة: نصّ ورابط معًا أو لا شيء — زرّ بلا رابط لا يفعل شيئًا
+  const ctaLabel = str(formData.get("ctaLabel"));
+  const ctaRaw = str(formData.get("ctaUrl"));
+  const ctaTone = str(formData.get("ctaTone")) || "brand";
+  const ctaNote = str(formData.get("ctaNote"));
+  if (Boolean(ctaLabel) !== Boolean(ctaRaw)) {
+    return { ok: false, message: "أكمل نصّ الزرّ ورابطه معًا، أو اتركهما فارغين لعارض بلا زرّ" };
+  }
+  if (ctaLabel.length > 40) return { ok: false, message: "نصّ الزرّ طويل — ٤٠ حرفًا على الأكثر" };
+  if (ctaNote.length > 90) return { ok: false, message: "السطر تحت الزرّ طويل — ٩٠ حرفًا على الأكثر" };
+  if (!isCtaTone(ctaTone)) return { ok: false, message: "اختر لون الزرّ من القائمة" };
+  const ctaUrl = cleanLink(ctaRaw);
+  if (!ctaUrl.ok) {
+    return {
+      ok: false,
+      message: "رابط الزرّ غير صالح — مسار يبدأ بـ / (مثل ‎/checkout/START) أو ‎#plans أو رابط يبدأ بـ https://",
+    };
+  }
+
   const exists = await db.slider.findUnique({ where: { id }, select: { id: true } });
   if (!exists) return { ok: false, message: "العارض غير موجود — ربما حُذف" };
 
@@ -123,6 +143,10 @@ export async function saveSliderAction(
       aspect,
       autoplay: formData.get("autoplay") === "on",
       isActive: formData.get("isActive") === "on",
+      ctaLabel: ctaLabel || null,
+      ctaUrl: ctaUrl.value,
+      ctaTone,
+      ctaNote: ctaNote || null,
     },
   });
   refresh(id);

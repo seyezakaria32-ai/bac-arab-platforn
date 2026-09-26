@@ -6,6 +6,8 @@ import { db } from "@/lib/db";
 import { BUNDLED_IMAGES } from "@/lib/settings";
 import {
   aspectCss,
+  CTA_TONES,
+  toCta,
   INTERVAL_OPTIONS_S,
   PER_VIEW_OPTIONS,
   SLIDER_ASPECTS,
@@ -22,6 +24,7 @@ import {
 } from "@/components/admin/Form";
 import { SlidesManager } from "@/components/admin/SlidesManager";
 import { ImageSlider } from "@/components/marketing/ImageSlider";
+import { CtaButton } from "@/components/marketing/CtaButton";
 import { Alert, Badge } from "@/components/ui";
 import { IconArrowPrev, IconTrash } from "@/components/ui/icons";
 
@@ -46,6 +49,7 @@ export default async function SliderEditPage({
   if (!slider) notFound();
 
   const aspect = aspectCss(slider.aspect);
+  const cta = toCta(slider);
   const previewHref = slider.placement.startsWith("dashboard.") ? "/dashboard" : "/";
 
   return (
@@ -168,6 +172,47 @@ export default async function SliderEditPage({
               hint="الصور تُقصّ من الأطراف لتملأ الإطار — اختر الأقرب لمقاس صورك"
             />
           </div>
+          {/* ── زرّ الدعوة ── */}
+          <fieldset className="rounded-2xl border border-cream-300 bg-cream-50/60 p-4 sm:p-5">
+            <legend className="px-2 font-display text-[14.5px] font-black text-ink-900">
+              زرّ تحت العارض <span className="font-normal text-ink-500">(اختياري)</span>
+            </legend>
+            <p className="mb-4 text-[12.5px] leading-relaxed text-ink-500">
+              زرّ بتصميم لافت — إطار متلألئ، لمعة، وهالات حوله — يدعو الزائر إلى
+              خطوة واحدة. يظهر حين تملأ نصّه ورابطه معًا؛ امسحهما لإزالته.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field
+                label="نصّ الزرّ"
+                name="ctaLabel"
+                defaultValue={slider.ctaLabel}
+                placeholder="مثال: احجز مقعدك الآن"
+                hint="قصير وواضح — فعل يبدأ به الزائر"
+              />
+              <Field
+                label="رابط الزرّ"
+                name="ctaUrl"
+                dir="ltr"
+                defaultValue={slider.ctaUrl}
+                placeholder="/checkout/START"
+                hint="‎#plans للباقات · ‎/register للتسجيل · أو رابط كامل (واتساب مثلًا)"
+              />
+              <Select
+                label="لون الزرّ"
+                name="ctaTone"
+                defaultValue={slider.ctaTone}
+                options={CTA_TONES.map((t) => ({ value: t.key, label: t.label }))}
+              />
+              <Field
+                label="سطر صغير تحت الزرّ"
+                name="ctaNote"
+                defaultValue={slider.ctaNote}
+                placeholder="مثال: سعر الإطلاق لفترة محدودة"
+                hint="اختياري — يزيد الإحساس بالاستعجال"
+              />
+            </div>
+          </fieldset>
+
           <div className="grid gap-3 sm:grid-cols-2">
             <Toggle
               label="تشغيل تلقائي"
@@ -209,6 +254,7 @@ export default async function SliderEditPage({
               autoplay={slider.autoplay}
               label="معاينة العارض"
             />
+            {cta && <CtaButton cta={cta} />}
           </div>
         </section>
       )}

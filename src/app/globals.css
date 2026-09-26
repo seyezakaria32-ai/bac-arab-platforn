@@ -281,6 +281,150 @@ h4 {
   }
 }
 
+/* ── زرّ الدعوة تحت العارضات (components/marketing/CtaButton) ──
+   لكل لون أربعة متغيّرات: تدرّج الخلفية (a → b)، لون النصّ، ولون الهالة. */
+@property --cta-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+.cta {
+  --cta-a: var(--color-brand-400);
+  --cta-b: var(--color-brand-600);
+  --cta-text: var(--color-ink-900);
+  --cta-edge: var(--color-brand-100);
+  --cta-halo: var(--color-brand-500);
+  position: relative;
+  display: inline-flex;
+  max-width: 100%;
+  isolation: isolate;
+}
+.cta[data-tone="gold"] {
+  --cta-a: var(--color-gold-400);
+  --cta-b: var(--color-gold-600);
+  --cta-edge: var(--color-gold-100);
+  --cta-halo: var(--color-gold-500);
+}
+.cta[data-tone="dark"] {
+  --cta-a: var(--color-ink-700);
+  --cta-b: var(--color-ink-900);
+  --cta-text: #fff;
+  --cta-edge: var(--color-brand-300);
+  --cta-halo: var(--color-brand-400);
+}
+
+/* هالتان تتّسعان من حواف الزرّ وتتلاشيان بالتناوب.
+   outline-offset لا scale: الزرّ عريض، والتكبير كان سيمطّ الهالة أفقيًا
+   أكثر منه عموديًا؛ الإزاحة تُبعدها بالمسافة نفسها من كل الجهات. */
+.cta::before,
+.cta::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: 1.1rem;
+  outline: 2px solid var(--cta-halo);
+  outline-offset: 0;
+  opacity: 0;
+  animation: cta-ring 2.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  pointer-events: none;
+}
+.cta::after { animation-delay: 1.3s; }
+@keyframes cta-ring {
+  0% { outline-offset: 0; opacity: 0.6; }
+  100% { outline-offset: 18px; opacity: 0; }
+}
+
+.cta-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 2rem;
+  border-radius: 1.1rem;
+  font-family: var(--font-ui);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.5;
+  color: var(--cta-text);
+  overflow: hidden;
+  /* إطار بتدرّج دائري يدور حول الزرّ: خلفيتان، واحدة للمحتوى وأخرى للإطار */
+  border: 2px solid transparent;
+  background:
+    linear-gradient(135deg, var(--cta-a), var(--cta-b)) padding-box,
+    conic-gradient(from var(--cta-angle), #fff, var(--cta-edge), var(--cta-a), var(--cta-edge), #fff) border-box;
+  box-shadow:
+    0 12px 32px -10px color-mix(in oklab, var(--cta-halo) 75%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.35);
+  animation: cta-spin 4s linear infinite;
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+}
+.cta-btn:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow:
+    0 18px 40px -10px color-mix(in oklab, var(--cta-halo) 90%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 0.45);
+}
+.cta-btn:active { transform: translateY(0) scale(0.98); }
+.cta-btn:focus-visible {
+  outline: 3px solid var(--color-ink-900);
+  outline-offset: 4px;
+}
+@keyframes cta-spin { to { --cta-angle: 360deg; } }
+
+/* لمعة تعبر الزرّ في اتجاه القراءة (inset-inline-start: من اليمين في العربية) */
+.cta-shine {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+.cta-shine::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  bottom: -50%;
+  inset-inline-start: -60%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.55), transparent);
+  transform: skewX(-20deg);
+  animation: cta-shine 3.4s ease-in-out infinite;
+}
+@keyframes cta-shine {
+  0%, 55% { inset-inline-start: -60%; }
+  100% { inset-inline-start: 130%; }
+}
+
+/* السهم ينبض نحو «التالي» (اليسار في العربية) */
+.cta-arrow { animation: cta-nudge 1.6s ease-in-out infinite; }
+@keyframes cta-nudge {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-5px); }
+}
+
+.cta-spark {
+  position: absolute;
+  z-index: 1;
+  color: var(--cta-halo);
+  opacity: 0;
+  pointer-events: none;
+  animation: cta-twinkle 2.2s ease-in-out infinite;
+}
+@keyframes cta-twinkle {
+  0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1) rotate(90deg); }
+}
+
+@media (max-width: 639px) {
+  .cta-btn { min-height: 3.25rem; padding-inline: 1.5rem; font-size: 1rem; }
+}
+
 /* الطباعة — تُستعمل خاصةً في شهادة إتمام البرنامج */
 @media print {
   header,
@@ -300,9 +444,14 @@ h4 {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
+    /* وإلا بقيت الحركات اللانهائية تتكرّر بسرعة خاطفة بدل أن تتوقّف */
+    animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
   /* العنصر الوهمي ::details-content لا يطابقه * أعلاه */
   details::details-content { transition: none !important; }
+  /* زرّ الدعوة: يبقى بتصميمه، بلا هالات ولا نجوم ولا لمعة */
+  .cta::before, .cta::after, .cta-spark, .cta-shine { display: none; }
+  .cta-btn, .cta-arrow { animation: none !important; }
 }
