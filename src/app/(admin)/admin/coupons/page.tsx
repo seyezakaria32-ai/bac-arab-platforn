@@ -17,6 +17,7 @@ import {
   ActionButton,
 } from "@/components/admin/Form";
 import { Badge, StatCard, EmptyState } from "@/components/ui";
+import { requestOrigin } from "@/lib/site-url";
 import {
   IconArrowPrev,
   IconPlus,
@@ -183,7 +184,7 @@ export default async function AdminCouponsPage() {
   const totalRevenue = stats.reduce((n, s) => n + (s._sum.amountCents ?? 0), 0);
   const totalDiscount = stats.reduce((n, s) => n + (s._sum.discountCents ?? 0), 0);
   const totalUses = stats.reduce((n, s) => n + s._count._all, 0);
-  const site = process.env.NEXT_PUBLIC_SITE_URL ?? "";
+  const site = await requestOrigin();
 
   return (
     <div className="container-page max-w-5xl space-y-6 py-8">

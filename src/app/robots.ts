@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
+import { siteUrl } from "@/lib/site-url";
 
-const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const base = siteUrl();
 
 /**
  * الصفحة التعريفية مفتوحة لمحرّكات البحث، وكل ما يخصّ الطالب أو الإدارة

@@ -13,6 +13,7 @@ import {
 import { quoteCoupon } from "@/lib/coupons";
 import { saveUpload, UploadError } from "@/lib/storage";
 import { PAYMENT_STATUS } from "@/lib/constants";
+import { requestOrigin } from "@/lib/site-url";
 
 export type CheckoutResponse =
   | { ok: false; message: string }
@@ -137,7 +138,7 @@ export async function startCheckoutAction(
     coupon,
   });
 
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+  const base = await requestOrigin();
 
   try {
     const result = await provider.createCheckout({

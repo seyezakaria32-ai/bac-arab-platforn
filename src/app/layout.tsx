@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { IBM_Plex_Sans_Arabic, Almarai, Readex_Pro } from "next/font/google";
 import "./globals.css";
+import { siteUrl } from "@/lib/site-url";
 
 /*
  * ثلاثة خطوط متجانسة — كلها بلا زخارف ومتقاربة السُّمك — لكلٍّ دور
@@ -37,7 +38,7 @@ const readex = Readex_Pro({
 export const metadata: Metadata = {
   // أساس الروابط المطلقة (صورة المشاركة، og:url). بدونه تبقى الروابط على
   // localhost في الإنتاج فلا تظهر بطاقة المشاركة في واتساب وفيسبوك.
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
+  metadataBase: new URL(siteUrl()),
   title: {
     default: "الدليل الشامل لمنهجية الإجابة في التاريخ والجغرافيا | Bac Arabe Sénégal",
     template: "%s | Bac Arabe Sénégal",
