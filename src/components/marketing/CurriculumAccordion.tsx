@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui";
 import { Collapse } from "@/components/ui/Collapse";
+import { useAnchoredToggle } from "@/lib/use-anchored-toggle";
 import {
   IconChevronDown,
   IconPlayCircle,
@@ -42,19 +43,9 @@ function watermarkFor(trackTitle: string) {
 }
 
 export function CurriculumAccordion({ tracks }: { tracks: PublicTrack[] }) {
-  // الوحدة الأولى من المسار الأول مفتوحة افتراضيًا.
-  // عدّة وحدات يمكن فتحها معًا: إغلاق وحدة تلقائيًا عند فتح أخرى كان يطوي
-  // محتوى فوق موضع النقر، فتقفز الصفحة كلّها إلى الأعلى تحت إصبع الزائر.
-  const [open, setOpen] = useState<Set<string>>(
-    () => new Set(tracks[0]?.modules[0] ? [tracks[0].modules[0].id] : []),
-  );
-  const toggle = (id: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+  // الوحدة الأولى من المسار الأول مفتوحة افتراضيًا
+  const [open, setOpen] = useState<string | null>(tracks[0]?.modules[0]?.id ?? null);
+  const anchored = useAnchoredToggle();
 
   return (
     <div className="space-y-10">
@@ -91,7 +82,7 @@ export function CurriculumAccordion({ tracks }: { tracks: PublicTrack[] }) {
 
             <div className="space-y-3">
               {track.modules.map((mod) => {
-                const isOpen = open.has(mod.id);
+                const isOpen = open === mod.id;
                 const modMinutes = mod.lessons.reduce(
                   (s, l) => s + l.durationMinutes,
                   0,
@@ -106,7 +97,11 @@ export function CurriculumAccordion({ tracks }: { tracks: PublicTrack[] }) {
                   >
                     <button
                       type="button"
-                      onClick={() => toggle(mod.id)}
+                      // وحدة واحدة مفتوحة: فتح وحدة يطوي السابقة، والعنوان المنقور يبقى مكانه
+                      onClick={(e) => {
+                        const btn = e.currentTarget;
+                        anchored(btn, () => setOpen(isOpen ? null : mod.id));
+                      }}
                       aria-expanded={isOpen}
                       className="flex w-full items-center gap-3 px-4 py-4 text-right transition-colors hover:bg-cream-50 sm:px-5"
                     >

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { IconChevronDown } from "@/components/ui/icons";
 import { Collapse } from "@/components/ui/Collapse";
+import { useAnchoredToggle } from "@/lib/use-anchored-toggle";
 
 const ITEMS = [
   {
@@ -40,20 +41,13 @@ const ITEMS = [
 ];
 
 export function Faq() {
-  // عدّة أجوبة مفتوحة معًا، كي لا يطوي فتحُ سؤال جوابًا فوقه فتقفز الصفحة
-  const [open, setOpen] = useState<Set<number>>(() => new Set([0]));
-  const toggle = (i: number) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      if (next.has(i)) next.delete(i);
-      else next.add(i);
-      return next;
-    });
+  const [open, setOpen] = useState<number | null>(0);
+  const anchored = useAnchoredToggle();
 
   return (
     <div className="mx-auto max-w-3xl space-y-3">
       {ITEMS.map((item, i) => {
-        const isOpen = open.has(i);
+        const isOpen = open === i;
         return (
           <div
             key={item.q}
@@ -63,7 +57,11 @@ export function Faq() {
           >
             <button
               type="button"
-              onClick={() => toggle(i)}
+              // سؤال واحد مفتوح: فتح سؤال يطوي السابق، والسؤال المنقور يبقى مكانه
+              onClick={(e) => {
+                const btn = e.currentTarget;
+                anchored(btn, () => setOpen(isOpen ? null : i));
+              }}
               aria-expanded={isOpen}
               className="flex w-full items-center gap-3 px-5 py-4 text-right transition-colors hover:bg-cream-50"
             >
