@@ -46,6 +46,7 @@ export function ImageSlider({
   intervalMs = 2000,
   aspect = "760 / 853",
   autoplay = true,
+  mode = "loop",
   label = "عارض صور",
 }: {
   slides: SliderSlide[];
@@ -55,6 +56,11 @@ export function ImageSlider({
   /** نسبة الإطار بصيغة CSS، مثل "16 / 9" */
   aspect?: string;
   autoplay?: boolean;
+  /**
+   * loop: دوران مستمر في الاتجاه نفسه بلا نهاية.
+   * bounce: ذهاب وإياب — عند آخر صورة يعكس اتجاهه ويعود صورةً صورة.
+   */
+  mode?: "loop" | "bounce";
   label?: string;
 }) {
   const n = slides.length;
@@ -80,6 +86,11 @@ export function ImageSlider({
   const justDragged = useRef(false);
 
   const canSlide = n > perView;
+  const bounce = mode === "bounce";
+  /** آخر موضع في وضع الذهاب والإياب: حين تظهر الصور الأخيرة كاملة */
+  const lastIndex = Math.max(n - perView, 0);
+  /** اتجاه التشغيل التلقائي في وضع الذهاب والإياب */
+  const dir = useRef<1 | -1>(1);
 
   /* عدد الشرائح الظاهرة بحسب عرض الشاشة — مطابق لفئات BASIS */
   useEffect(() => {
@@ -100,6 +111,7 @@ export function ImageSlider({
   useEffect(() => {
     setAnimate(false);
     setIndex(0);
+    dir.current = 1;
   }, [n, perView]);
 
   /* تقليل الحركة: العرض يبدأ متوقّفًا ويُحرَّك يدويًا فقط */
@@ -150,6 +162,13 @@ export function ImageSlider({
 
   const next = useCallback(() => {
     if (!canSlide || busy.current) return;
+    if (bounce) {
+      if (index >= lastIndex) return;
+      lock();
+      setAnimate(true);
+      setIndex(index + 1);
+      return;
+    }
     lock();
     // على نسخة مكرّرة (لم تصل transitionend لسبب ما): نعود للأصل ثم نتقدّم
     if (index >= n) jumpThenSlide(index - n, index - n + 1);
@@ -157,10 +176,17 @@ export function ImageSlider({
       setAnimate(true);
       setIndex(index + 1);
     }
-  }, [canSlide, index, n]);
+  }, [canSlide, index, n, bounce, lastIndex]);
 
   const prev = () => {
     if (!canSlide || busy.current) return;
+    if (bounce) {
+      if (index <= 0) return;
+      lock();
+      setAnimate(true);
+      setIndex(index - 1);
+      return;
+    }
     lock();
     // من البداية إلى الخلف: النسخة المطابقة للبداية في آخر الشريط، ثم خطوة
     if (index === 0) jumpThenSlide(n, n - 1);
@@ -171,6 +197,7 @@ export function ImageSlider({
   };
 
   const goTo = (k: number) => {
+    if (bounce) k = Math.min(k, lastIndex);
     if (!canSlide || busy.current || k === index % n) return;
     lock();
     setAnimate(true);
@@ -188,8 +215,16 @@ export function ImageSlider({
   };
 
   /* التقدّم التلقائي: مؤقّت جديد بعد كل انتقال */
-  const nextRef = useRef(next);
-  nextRef.current = next;
+  /** خطوة التشغيل التلقائي: دائمًا إلى الأمام، أو ذهابًا وإيابًا */
+  const autoStep = () => {
+    if (!bounce) return next();
+    if (index >= lastIndex) dir.current = -1;
+    else if (index <= 0) dir.current = 1;
+    if (dir.current === 1) next();
+    else prev();
+  };
+  const nextRef = useRef(autoStep);
+  nextRef.current = autoStep;
   const playing = canSlide && !userPaused && !hovered && !focused && onScreen && tabVisible && drag === 0;
   useEffect(() => {
     if (!playing) return;
@@ -223,7 +258,9 @@ export function ImageSlider({
       }
       setAnimate(false);
     }
-    setDrag(dx);
+    // في وضع الذهاب والإياب لا شيء بعد الطرفين: السحب يقاوم ثم يرتدّ
+    const pastEdge = bounce && ((index >= lastIndex && dx > 0) || (index <= 0 && dx < 0));
+    setDrag(pastEdge ? dx * 0.3 : dx);
   };
   const endDrag = () => {
     const s = dragStart.current;
@@ -240,11 +277,13 @@ export function ImageSlider({
 
   if (n === 0) return null;
 
-  const track = canSlide ? [...slides, ...slides.slice(0, maxPV)] : slides;
+  const track = canSlide && !bounce ? [...slides, ...slides.slice(0, maxPV)] : slides;
   const active = index % n;
+  // الذهاب والإياب: نقطة لكل موضع ممكن (4 صور، اثنتان معًا ← 3 مواضع)
+  const dots = bounce ? lastIndex + 1 : n;
   const step = 100 / perView;
   const arrow =
-    "absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-lg text-ink-800 shadow-md ring-1 ring-ink-900/10 backdrop-blur transition hover:bg-white hover:text-brand-700";
+    "absolute top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-lg text-ink-800 shadow-md ring-1 ring-ink-900/10 backdrop-blur transition hover:bg-white hover:text-brand-700 disabled:cursor-default disabled:opacity-35 disabled:hover:bg-white/90 disabled:hover:text-ink-800";
 
   return (
     <div
@@ -264,13 +303,17 @@ export function ImageSlider({
       <div className="relative">
         <div className="overflow-hidden rounded-2xl">
           <div
-            className={`flex touch-pan-y ${
-              animate ? "transition-transform ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none" : ""
-            }`}
+            className="flex touch-pan-y"
             style={{
               // RTL: الشريط يمتدّ من اليمين، والتقدّم يكون بإزاحته نحو اليمين
               transform: `translate3d(calc(${index * step}% + ${drag}px), 0, 0)`,
-              transitionDuration: `${SLIDE_MS}ms`,
+              // transition كاملة هنا أو none صريحة — لا مدّة وحدها: كانت المدّة
+              // مكتوبة دائمًا، فحين تُزال خاصيّة transform يعود المتصفّح إلى
+              // القيمة الافتراضية all ويحرّك كل شيء 650ms، فتظهر «القفزة
+              // الصامتة» إلى البداية ارتدادًا سريعًا مرئيًا، ويتأخّر السحب عن الإصبع.
+              transition: animate
+                ? `transform ${SLIDE_MS}ms cubic-bezier(0.22, 1, 0.36, 1)`
+                : "none",
             }}
             onTransitionEnd={onTransitionEnd}
             onPointerDown={onPointerDown}
@@ -337,10 +380,22 @@ export function ImageSlider({
         {canSlide && (
           <>
             {/* «السابق» يمينًا و«التالي» يسارًا بحسب اتجاه القراءة */}
-            <button type="button" onClick={prev} aria-label="الصورة السابقة" className={`${arrow} right-3`}>
+            <button
+              type="button"
+              onClick={prev}
+              disabled={bounce && index <= 0}
+              aria-label="الصورة السابقة"
+              className={`${arrow} right-3`}
+            >
               <IconArrowPrev />
             </button>
-            <button type="button" onClick={next} aria-label="الصورة التالية" className={`${arrow} left-3`}>
+            <button
+              type="button"
+              onClick={next}
+              disabled={bounce && index >= lastIndex}
+              aria-label="الصورة التالية"
+              className={`${arrow} left-3`}
+            >
               <IconArrowNext />
             </button>
           </>
@@ -350,9 +405,9 @@ export function ImageSlider({
       {canSlide && (
         <div className="mt-4 flex items-center justify-center gap-3">
           <div className="flex flex-wrap items-center justify-center gap-2">
-            {slides.map((p, k) => (
+            {Array.from({ length: dots }, (_, k) => (
               <button
-                key={`${p.src}-dot-${k}`}
+                key={k}
                 type="button"
                 onClick={() => goTo(k)}
                 aria-label={`عرض الصورة ${k + 1}`}

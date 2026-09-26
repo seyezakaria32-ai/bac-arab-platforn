@@ -78,6 +78,15 @@ export function toCta(s: {
   };
 }
 
+export const LOOP_MODES = [
+  { key: "bounce", label: "ذهاب وإياب — عند آخر صورة يعود بالاتجاه المعاكس بسلاسة" },
+  { key: "loop", label: "دوران مستمر — يواصل في الاتجاه نفسه بلا نهاية" },
+] as const;
+
+export type LoopMode = (typeof LOOP_MODES)[number]["key"];
+
+export const isLoopMode = (key: string): key is LoopMode => LOOP_MODES.some((m) => m.key === key);
+
 export const PER_VIEW_OPTIONS = [1, 2, 3, 4] as const;
 export const INTERVAL_OPTIONS_S = [1, 1.5, 2, 3, 4, 5, 7] as const;
 
@@ -89,6 +98,7 @@ export type SliderView = {
   intervalMs: number;
   aspect: string;
   autoplay: boolean;
+  mode: LoopMode;
   slides: { id: string; src: string; alt: string; href: string | null }[];
   cta: SliderCta | null;
 };
@@ -144,6 +154,7 @@ export async function getSlidersByPlacement(
       intervalMs: s.intervalMs,
       aspect: s.aspect,
       autoplay: s.autoplay,
+      mode: isLoopMode(s.loopMode) ? s.loopMode : "bounce",
       cta: toCta(s),
       slides: s.slides.map((sl) => ({
         id: sl.id,

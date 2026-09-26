@@ -33,6 +33,7 @@ export function SliderSlot({
         intervalMs={s.intervalMs}
         aspect={aspectCss(s.aspect)}
         autoplay={s.autoplay}
+        mode={s.mode}
         label={s.title ?? "عارض صور"}
       />
       {s.cta && <CtaButton cta={s.cta} />}

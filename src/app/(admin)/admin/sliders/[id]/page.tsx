@@ -7,6 +7,7 @@ import { BUNDLED_IMAGES } from "@/lib/settings";
 import {
   aspectCss,
   CTA_TONES,
+  LOOP_MODES,
   toCta,
   INTERVAL_OPTIONS_S,
   PER_VIEW_OPTIONS,
@@ -165,6 +166,12 @@ export default async function SliderEditPage({
               hint="الصور المليئة بالنصوص تحتاج وقتًا أطول لقراءتها"
             />
             <Select
+              label="طريقة التنقّل عند آخر صورة"
+              name="loopMode"
+              defaultValue={slider.loopMode}
+              options={LOOP_MODES.map((m) => ({ value: m.key, label: m.label }))}
+            />
+            <Select
               label="شكل الإطار"
               name="aspect"
               defaultValue={slider.aspect}
@@ -246,12 +253,13 @@ export default async function SliderEditPage({
             )}
             <ImageSlider
               // مفتاح يتغيّر مع الإعدادات: المعاينة تبدأ من جديد بعد كل حفظ
-              key={`${slider.perView}-${slider.intervalMs}-${slider.aspect}-${slider.autoplay}`}
+              key={`${slider.perView}-${slider.intervalMs}-${slider.aspect}-${slider.autoplay}-${slider.loopMode}`}
               slides={slider.slides.map((s) => ({ src: s.imageUrl, alt: s.alt, href: null }))}
               perView={slider.perView}
               intervalMs={slider.intervalMs}
               aspect={aspect}
               autoplay={slider.autoplay}
+              mode={slider.loopMode === "loop" ? "loop" : "bounce"}
               label="معاينة العارض"
             />
             {cta && <CtaButton cta={cta} />}

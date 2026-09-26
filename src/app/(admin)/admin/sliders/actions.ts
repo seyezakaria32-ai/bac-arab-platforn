@@ -8,6 +8,7 @@ import { saveUpload, UploadError } from "@/lib/storage";
 import { ROLES } from "@/lib/constants";
 import {
   isCtaTone,
+  isLoopMode,
   isPlacement,
   PER_VIEW_OPTIONS,
   SLIDER_ASPECTS,
@@ -120,6 +121,8 @@ export async function saveSliderAction(
   if (ctaLabel.length > 40) return { ok: false, message: "نصّ الزرّ طويل — ٤٠ حرفًا على الأكثر" };
   if (ctaNote.length > 90) return { ok: false, message: "السطر تحت الزرّ طويل — ٩٠ حرفًا على الأكثر" };
   if (!isCtaTone(ctaTone)) return { ok: false, message: "اختر لون الزرّ من القائمة" };
+  const loopMode = str(formData.get("loopMode")) || "bounce";
+  if (!isLoopMode(loopMode)) return { ok: false, message: "اختر طريقة التنقّل من القائمة" };
   const ctaUrl = cleanLink(ctaRaw);
   if (!ctaUrl.ok) {
     return {
@@ -142,6 +145,7 @@ export async function saveSliderAction(
       intervalMs: Math.round(intervalS * 1000),
       aspect,
       autoplay: formData.get("autoplay") === "on",
+      loopMode,
       isActive: formData.get("isActive") === "on",
       ctaLabel: ctaLabel || null,
       ctaUrl: ctaUrl.value,

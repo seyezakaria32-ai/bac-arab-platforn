@@ -436,6 +436,8 @@ model Slider {
   /// شكل الإطار: poster | square | landscape | banner
   aspect     String   @default("poster")
   autoplay   Boolean  @default(true)
+  /// bounce: ذهاب وإياب عند الطرفين · loop: دوران مستمر في اتجاه واحد
+  loopMode   String   @default("bounce")
   isActive   Boolean  @default(true)
   /// زرّ اختياري تحت العارض — يظهر فقط إن ضُبط النصّ والرابط معًا
   ctaLabel   String?
