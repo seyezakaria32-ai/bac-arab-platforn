@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Curriculum } from "@/lib/curriculum";
 import { ProgressBar, Badge } from "@/components/ui";
 import { Collapse } from "@/components/ui/Collapse";
+import { useAnchoredToggle } from "@/lib/use-anchored-toggle";
 import {
   IconCheckCircle,
   IconPlayCircle,
@@ -27,12 +28,9 @@ export function LessonSidebar({
   activeLessonId?: string;
   activeModuleId?: string;
 }) {
-  const [open, setOpen] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    for (const t of curriculum.tracks)
-      for (const m of t.modules) initial[m.id] = m.id === activeModuleId;
-    return initial;
-  });
+  // وحدة واحدة مفتوحة، كما في الصفحة الرئيسية: فتح وحدة يطوي السابقة
+  const [open, setOpen] = useState<string | null>(activeModuleId ?? null);
+  const anchored = useAnchoredToggle();
 
   return (
     <div className="flex h-full flex-col">
@@ -61,14 +59,15 @@ export function LessonSidebar({
             </p>
 
             {track.modules.map((mod) => {
-              const isOpen = open[mod.id];
+              const isOpen = open === mod.id;
               return (
                 <div key={mod.id} className="border-b border-cream-200">
                   <button
                     type="button"
-                    onClick={() =>
-                      setOpen((s) => ({ ...s, [mod.id]: !s[mod.id] }))
-                    }
+                    onClick={(e) => {
+                      const btn = e.currentTarget;
+                      anchored(btn, () => setOpen(isOpen ? null : mod.id));
+                    }}
                     aria-expanded={isOpen}
                     className="flex w-full items-start gap-2 px-4 py-3 text-right transition-colors hover:bg-cream-50"
                   >
@@ -97,7 +96,7 @@ export function LessonSidebar({
                     )}
                   </button>
 
-                  <Collapse open={Boolean(isOpen)}>
+                  <Collapse open={isOpen}>
                     <ul className="bg-cream-50/60 pb-1">
                       {mod.lessons.map((lesson, i) => {
                         const active = lesson.id === activeLessonId;
