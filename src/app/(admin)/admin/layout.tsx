@@ -17,6 +17,7 @@ export default async function AdminLayout({
           { href: "/admin/content", label: "المحتوى" },
           { href: "/admin/appearance", label: "الواجهة" },
           { href: "/admin/sliders", label: "السلايدر" },
+          { href: "/admin/buttons", label: "الأزرار" },
           { href: "/admin/students", label: "الطلاب" },
           { href: "/admin/reviews", label: "التصحيح" },
           { href: "/admin/payments", label: "المدفوعات" },

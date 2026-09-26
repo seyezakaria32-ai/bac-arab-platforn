@@ -7,8 +7,9 @@ import { formatPrice, planFeatures } from "@/lib/payments/service";
 import { BRAND } from "@/lib/constants";
 import { Badge, LinkButton } from "@/components/ui";
 import { CountUp } from "@/components/marketing/CountUp";
-import { SliderSlot } from "@/components/marketing/SliderSlot";
-import { ensureDefaultSlider, getSlidersByPlacement } from "@/lib/sliders";
+import { BlockSlot } from "@/components/marketing/BlockSlot";
+import { ensureDefaultSlider } from "@/lib/sliders";
+import { getBlocksByPlacement, splitBlocks } from "@/lib/blocks";
 import { reveal } from "@/lib/reveal";
 import {
   IconCheck,
@@ -81,13 +82,14 @@ function SectionTitle({
 
 export default async function LandingPage() {
   await ensureDefaultSlider().catch(() => {});
-  const [course, plans, settings, sliders] = await Promise.all([
+  const [course, plans, settings, blocks] = await Promise.all([
     getPublicCurriculum(),
     db.plan.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
     getSettings(),
-    getSlidersByPlacement("home"),
+    getBlocksByPlacement("home"),
   ]);
-  const aboutSliders = sliders["home.about"];
+  // «عن البرنامج»: العارض في العمود المجاور للنصّ، والزرّ تحت النصّ
+  const about = splitBlocks(blocks["home.about"]);
 
   const intro = settings["site.introVideo"];
   const introEmbed = toEmbed(intro.url);
@@ -148,6 +150,9 @@ export default async function LandingPage() {
                 اكتشف البرنامج
               </LinkButton>
             </div>
+
+            {/* أزرار من لوحة الإدارة، الموضع «داخل الواجهة الأولى» */}
+            <BlockSlot bare dark align="start" blocks={blocks["home.hero"]} className="mt-9" />
 
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-4 border-t border-white/15 pt-6">
               {[
@@ -226,7 +231,7 @@ export default async function LandingPage() {
         ))}
       </section>
 
-      <SliderSlot sliders={sliders["home.top"]} />
+      <BlockSlot blocks={blocks["home.top"]} />
 
       {/* ════════════════════ فيديو التعريف ════════════════════
           يُدار من لوحة الإدارة ← الواجهة، ولا يظهر ما دام الرابط فارغًا */}
@@ -266,10 +271,12 @@ export default async function LandingPage() {
         </section>
       )}
 
+      <BlockSlot blocks={blocks["home.afterVideo"]} />
+
       {/* ════════════════════ عن البرنامج ════════════════════ */}
       <section id="about" className="container-page scroll-mt-24 py-20 md:py-24">
         <div
-          className={`grid gap-12 lg:items-center ${aboutSliders ? "lg:grid-cols-[1fr_.85fr]" : "max-w-3xl"}`}
+          className={`grid gap-12 lg:items-center ${about.sliders.length ? "lg:grid-cols-[1fr_.85fr]" : "max-w-3xl"}`}
         >
           <div>
             <SectionTitle
@@ -312,14 +319,15 @@ export default async function LandingPage() {
                 </div>
               ))}
             </div>
+            <BlockSlot bare align="start" blocks={about.buttons} className="mt-9" />
           </div>
 
           {/* يُدار من لوحة الإدارة ← السلايدر، الموضع «داخل عن البرنامج» */}
-          <SliderSlot bare sliders={aboutSliders} />
+          <BlockSlot bare blocks={about.sliders} />
         </div>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterAbout"]} />
+      <BlockSlot blocks={blocks["home.afterAbout"]} />
 
       {/* ════════════════════ ماذا ستتعلّم ════════════════════ */}
       <section id="learn" className="scroll-mt-24 bg-white py-20 md:py-24">
@@ -411,7 +419,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterLearn"]} />
+      <BlockSlot blocks={blocks["home.afterLearn"]} />
 
       {/* ════════════════════ المنهج الدراسي ════════════════════ */}
       <section id="curriculum" className="container-page scroll-mt-24 py-20 md:py-24">
@@ -432,7 +440,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterCurriculum"]} />
+      <BlockSlot blocks={blocks["home.afterCurriculum"]} />
 
       {/* ════════════════════ رحلة الطالب ════════════════════ */}
       <section className="bg-white py-20 md:py-24">
@@ -482,7 +490,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterSteps"]} />
+      <BlockSlot blocks={blocks["home.afterSteps"]} />
 
       {/* ════════════════════ الباقات ════════════════════ */}
       <section id="plans" className="container-page scroll-mt-24 py-20 md:py-24">
@@ -585,7 +593,7 @@ export default async function LandingPage() {
         </p>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterPlans"]} />
+      <BlockSlot blocks={blocks["home.afterPlans"]} />
 
       {/* ════════════════════ الأسئلة الشائعة ════════════════════ */}
       <section id="faq" className="scroll-mt-24 bg-white py-20 md:py-24">
@@ -597,7 +605,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <SliderSlot sliders={sliders["home.afterFaq"]} />
+      <BlockSlot blocks={blocks["home.afterFaq"]} />
 
       {/* ════════════════════ نداء أخير ════════════════════ */}
       <section className="container-page py-16">

@@ -468,3 +468,25 @@ model Slide {
 
   @@index([sliderId, order])
 }
+
+/// زرّ دعوة مستقلّ بالتصميم اللافت نفسه، يوضع في أيّ موضع من الموقع
+/// (المواضع في src/lib/placements.ts، مشتركة مع العارضات)
+model SiteButton {
+  id        String   @id @default(cuid())
+  label     String
+  url       String
+  /// brand | gold | dark
+  tone      String   @default("brand")
+  /// عنوان قصير اختياري فوق الزرّ
+  title     String?
+  /// سطر قصير اختياري تحته
+  note      String?
+  placement String
+  /// الترتيب بين الأزرار والعارضات في الموضع نفسه — الأصغر أوّلًا
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([placement, isActive])
+}

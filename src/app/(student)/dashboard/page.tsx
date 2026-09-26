@@ -3,8 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getCurriculum, type ModuleNode } from "@/lib/curriculum";
 import { getSettings } from "@/lib/settings";
-import { getSlidersByPlacement } from "@/lib/sliders";
-import { SliderSlot } from "@/components/marketing/SliderSlot";
+import { getBlocksByPlacement } from "@/lib/blocks";
+import { BlockSlot } from "@/components/marketing/BlockSlot";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { daysLeft } from "@/lib/subscription-period";
@@ -45,13 +45,14 @@ function ModuleStateIcon({ module }: { module: ModuleNode }) {
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [curriculum, settings, sliders] = await Promise.all([
+  const [curriculum, settings, blocks] = await Promise.all([
     getCurriculum(user),
     getSettings(),
-    getSlidersByPlacement("dashboard"),
+    getBlocksByPlacement("dashboard"),
   ]);
   // إعلانات الإدارة: تظهر لكل طالب مسجَّل، مشتركًا كان أو لا
-  const announcements = <SliderSlot bare sliders={sliders["dashboard.top"]} />;
+  const announcements = <BlockSlot bare blocks={blocks["dashboard.top"]} />;
+  const footerBlocks = <BlockSlot bare blocks={blocks["dashboard.bottom"]} />;
 
   if (!curriculum) {
     return (
@@ -135,6 +136,7 @@ export default async function DashboardPage() {
             </p>
           </div>
         </div>
+        {footerBlocks}
       </div>
     );
   }
@@ -513,6 +515,7 @@ export default async function DashboardPage() {
           </div>
         </aside>
       </div>
+      {footerBlocks}
     </div>
   );
 }

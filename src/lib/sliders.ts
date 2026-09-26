@@ -1,33 +1,21 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { getSettings, setSetting } from "@/lib/settings";
+import { isPlacementFor, placementsFor, type PlacementKey } from "@/lib/placements";
 
 /**
- * عارضات الصور: المواضع المتاحة في الموقع، أشكال الإطار، والتحميل.
- *
- * المواضع قائمة ثابتة لا حقل حرّ: كل موضع مكان مُعَدّ في الصفحة بتنسيقه
- * وهوامشه، فيبقى الموقع متناسقًا مهما أُضيف من عارضات.
+ * عارضات الصور: أشكال الإطار، طرق التنقّل، والتحميل.
+ * المواضع مشتركة مع الأزرار — انظر src/lib/placements.ts.
  */
 
-export const SLIDER_PLACEMENTS = [
-  { key: "home.top", label: "الصفحة الرئيسية — أعلى الصفحة، بعد شريط المزايا" },
-  { key: "home.about", label: "الصفحة الرئيسية — داخل «عن البرنامج» بجانب النص" },
-  { key: "home.afterAbout", label: "الصفحة الرئيسية — بعد «عن البرنامج»" },
-  { key: "home.afterLearn", label: "الصفحة الرئيسية — بعد «ماذا ستتعلّم؟»" },
-  { key: "home.afterCurriculum", label: "الصفحة الرئيسية — بعد «محتوى البرنامج»" },
-  { key: "home.afterSteps", label: "الصفحة الرئيسية — بعد «كيف يعمل البرنامج؟»" },
-  { key: "home.afterPlans", label: "الصفحة الرئيسية — بعد الباقات" },
-  { key: "home.afterFaq", label: "الصفحة الرئيسية — بعد الأسئلة الشائعة" },
-  { key: "dashboard.top", label: "لوحة الطالب — في الأعلى (للإعلانات)" },
-] as const;
+export { placementLabel } from "@/lib/placements";
 
-export type SliderPlacement = (typeof SLIDER_PLACEMENTS)[number]["key"];
+/** كل موضع يصلح فيه عارض */
+export const SLIDER_PLACEMENTS = placementsFor("slider");
 
-export const placementLabel = (key: string) =>
-  SLIDER_PLACEMENTS.find((p) => p.key === key)?.label ?? "موضع غير معروف";
+export type SliderPlacement = PlacementKey;
 
-export const isPlacement = (key: string): key is SliderPlacement =>
-  SLIDER_PLACEMENTS.some((p) => p.key === key);
+export const isPlacement = (key: string): key is PlacementKey => isPlacementFor("slider", key);
 
 export const SLIDER_ASPECTS = [
   { key: "poster", label: "ملصق طولي (≈ 9:10)", css: "760 / 853" },
@@ -93,6 +81,8 @@ export const INTERVAL_OPTIONS_S = [1, 1.5, 2, 3, 4, 5, 7] as const;
 /** ما يحتاجه العرض للزائر — بلا حقول الإدارة */
 export type SliderView = {
   id: string;
+  /** الترتيب في الموضع — مشترك مع الأزرار */
+  order: number;
   title: string | null;
   perView: number;
   intervalMs: number;
@@ -133,7 +123,7 @@ export async function ensureDefaultSlider() {
 
 /** العارضات المفعّلة ذات الصور، مجمّعة حسب الموضع، لصفحة واحدة */
 export async function getSlidersByPlacement(
-  prefix: "home" | "dashboard",
+  prefix: "home" | "dashboard" | "lesson",
 ): Promise<Partial<Record<SliderPlacement, SliderView[]>>> {
   const rows = await db.slider
     .findMany({
@@ -149,6 +139,7 @@ export async function getSlidersByPlacement(
     if (!isPlacement(s.placement) || s.slides.length === 0) continue;
     (byPlacement[s.placement] ??= []).push({
       id: s.id,
+      order: s.order,
       title: s.title,
       perView: s.perView,
       intervalMs: s.intervalMs,

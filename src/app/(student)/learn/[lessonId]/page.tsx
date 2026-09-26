@@ -4,6 +4,8 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { db, parseJson } from "@/lib/db";
 import { getCurriculum, neighbours, findModule } from "@/lib/curriculum";
+import { getBlocksByPlacement } from "@/lib/blocks";
+import { BlockSlot } from "@/components/marketing/BlockSlot";
 import { tierAllows } from "@/lib/access";
 import { toEmbed } from "@/lib/video";
 import { Badge, Alert, LinkButton } from "@/components/ui";
@@ -46,7 +48,10 @@ export default async function LessonPage({
 }) {
   const { lessonId } = await params;
   const user = await requireUser(`/learn/${lessonId}`);
-  const curriculum = await getCurriculum(user);
+  const [curriculum, blocks] = await Promise.all([
+    getCurriculum(user),
+    getBlocksByPlacement("lesson"),
+  ]);
   if (!curriculum) notFound();
 
   const node = curriculum.flatLessons.find((l) => l.id === lessonId);
@@ -338,6 +343,9 @@ export default async function LessonPage({
               }
             />
           )}
+
+          {/* من لوحة الإدارة، الموضع «أسفل محتوى الدرس» */}
+          <BlockSlot bare blocks={blocks["lesson.bottom"]} className="border-t border-cream-200 pt-8" />
         </div>
       </div>
 

@@ -17,7 +17,20 @@ function Spark({ className }: { className: string }) {
  * صغيرة تتلألأ، وسهم ينبض نحو اتجاه القراءة. بلا JavaScript — لا عبء على
  * الهواتف — وكلّها تتوقّف لمن فعّل «تقليل الحركة».
  */
-export function CtaButton({ cta }: { cta: SliderCta }) {
+export function CtaButton({
+  cta,
+  className = "mt-8",
+  align = "center",
+  dark = false,
+}: {
+  cta: SliderCta;
+  /** المسافة حول الزرّ — تختلف تحت عارض عنها في موضع مستقلّ */
+  className?: string;
+  /** start: بمحاذاة بداية السطر (يمين الصفحة العربية)، كما في الواجهة الأولى */
+  align?: "center" | "start";
+  /** خلفية الموضع داكنة: السطر تحت الزرّ يُلوَّن بما يُقرأ عليها */
+  dark?: boolean;
+}) {
   const external = /^https?:\/\//i.test(cta.href);
   const content = (
     <>
@@ -28,7 +41,11 @@ export function CtaButton({ cta }: { cta: SliderCta }) {
   );
 
   return (
-    <div className="mt-8 flex flex-col items-center gap-3 text-center">
+    <div
+      className={`flex flex-col gap-3 ${
+        align === "start" ? "items-start text-start" : "items-center text-center"
+      } ${className}`}
+    >
       <div className="cta" data-tone={cta.tone}>
         <Spark className="-top-3 -left-3 size-4" />
         <Spark className="-right-4 -bottom-2.5 size-3 [animation-delay:1.1s]" />
@@ -44,8 +61,15 @@ export function CtaButton({ cta }: { cta: SliderCta }) {
         )}
       </div>
       {cta.note && (
-        <p className="flex items-center gap-2 text-[13px] font-bold text-ink-500">
-          <span className="size-1.5 shrink-0 animate-pulse rounded-full bg-brand-500" aria-hidden />
+        <p
+          className={`flex items-center gap-2 text-[13px] font-bold ${
+            dark ? "text-brand-100/85" : "text-ink-500"
+          }`}
+        >
+          <span
+            className={`size-1.5 shrink-0 animate-pulse rounded-full ${dark ? "bg-brand-300" : "bg-brand-500"}`}
+            aria-hidden
+          />
           {cta.note}
         </p>
       )}
