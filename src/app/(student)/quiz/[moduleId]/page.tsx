@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { getCurriculum, findModule } from "@/lib/curriculum";
-import { Badge, LinkButton, Alert, EmptyState } from "@/components/ui";
+import { Badge, LinkButton, EmptyState } from "@/components/ui";
 import {
   IconLock,
   IconTarget,
@@ -226,13 +226,6 @@ export default async function QuizPage({
         </div>
       </div>
 
-      {attempts.length > 0 && (
-        <Alert tone="warning" title={`المحاولة رقم ${attempts.length + 1}`}>
-          أفضل نتيجة سابقة: <span className="num font-bold">{quizNode.bestScore}%</span>.
-          راجع الدروس التي أخطأت فيها قبل إعادة المحاولة.
-        </Alert>
-      )}
-
       <QuizClient
         quizId={quiz.id}
         moduleId={mod.id}
@@ -241,6 +234,7 @@ export default async function QuizPage({
         questions={clientQuestions}
         passScore={quiz.passScore}
         attemptNumber={attempts.length + 1}
+        previousBest={attempts.length > 0 ? quizNode.bestScore : null}
         attemptsLeft={quizNode.attemptsLeft}
         nextLessonId={nextLesson?.id ?? null}
       />

@@ -323,6 +323,7 @@ export async function submitQuizAction(
     ok: true,
     data: {
       attemptId: attempt.id,
+      attemptNumber: attempt.attemptNumber,
       score,
       passed,
       passScore: quiz.passScore,

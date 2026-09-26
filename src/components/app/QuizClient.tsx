@@ -25,8 +25,19 @@ export type ClientQuestion = {
   options: { id: string; text: string }[];
 };
 
+/** العدد مع المعدود بقواعد العربية: سؤال واحد، سؤالان، 3 أسئلة، 11 سؤالًا */
+function remainingQuestions(n: number) {
+  if (n === 1) return "بقي سؤال واحد";
+  if (n === 2) return "بقي سؤالان";
+  if (n >= 3 && n <= 10) return `بقيت ${n} أسئلة`;
+  return `بقي ${n} سؤالًا`;
+}
+
 type Result = {
   attemptId: string;
+  /** رقم المحاولة المحفوظة فعلًا — الخاصية attemptNumber تتقدّم إلى المحاولة
+   *  التالية لحظة إعادة تحميل الصفحة بعد الإرسال، فتعرض النتيجةَ برقم خاطئ */
+  attemptNumber: number;
   score: number;
   passed: boolean;
   passScore: number;
@@ -45,6 +56,7 @@ export function QuizClient({
   attemptsLeft,
   nextLessonId,
   timeLimitMinutes = 0,
+  previousBest = null,
 }: {
   quizId: string;
   moduleId: string;
@@ -55,6 +67,8 @@ export function QuizClient({
   attemptsLeft: number | null;
   nextLessonId: string | null;
   timeLimitMinutes?: number;
+  /** أفضل نتيجة سابقة، أو null في المحاولة الأولى */
+  previousBest?: number | null;
 }) {
   const router = useRouter();
   const [answers, setAnswers] = useState<Record<string, string | string[]>>({});
@@ -102,13 +116,19 @@ export function QuizClient({
     [quizId, router],
   );
 
+  // رسالة «أجب عن جميع الأسئلة» تذكر عددًا؛ تُمحى عند أيّ إجابة جديدة حتى لا تبقى
+  // «بقي سؤالان» معروضة بعد أن صار الباقي سؤالًا واحدًا
+  useEffect(() => {
+    setError(null);
+  }, [answeredCount]);
+
   const submit = () => {
     setError(null);
     if (answeredCount < questions.length) {
       setError(
-        `أجب عن جميع الأسئلة قبل الإرسال — بقي ${
-          questions.length - answeredCount
-        } سؤالًا.`,
+        `أجب عن جميع الأسئلة قبل الإرسال — ${remainingQuestions(
+          questions.length - answeredCount,
+        )}.`,
       );
       return;
     }
@@ -178,7 +198,7 @@ export function QuizClient({
                 k: "النقاط",
                 v: `${result.earnedPoints} / ${result.totalPoints}`,
               },
-              { k: "رقم المحاولة", v: String(attemptNumber) },
+              { k: "رقم المحاولة", v: String(result.attemptNumber) },
             ].map((s) => (
               <div key={s.k} className="rounded-xl bg-cream-100 px-4 py-3">
                 <dt className="text-[12px] text-ink-500">{s.k}</dt>
@@ -246,6 +266,14 @@ export function QuizClient({
   /* ═════════════════════ شاشة الأسئلة ═════════════════════ */
   return (
     <div className="space-y-5">
+      {/* هنا لا في الصفحة: كان يظهر فوق نتيجة المحاولة التي أُرسلت للتوّ
+          معلنًا «المحاولة رقم 3» بينما الطالب يقرأ نتيجة المحاولة 2 */}
+      {previousBest !== null && (
+        <Alert tone="warning" title={`المحاولة رقم ${attemptNumber}`}>
+          أفضل نتيجة سابقة: <span className="num font-bold">{previousBest}%</span>.
+          راجع الدروس التي أخطأت فيها قبل إعادة المحاولة.
+        </Alert>
+      )}
       <div className="card sticky top-16 z-10 flex items-center gap-4 px-5 py-3.5">
         <div className="min-w-0 flex-1">
           <p className="num text-[12.5px] font-bold text-ink-500">
@@ -412,7 +440,7 @@ export function QuizClient({
         <p className="text-[13px] text-ink-500">
           {answeredCount === questions.length
             ? "أجبت عن جميع الأسئلة — يمكنك الإرسال."
-            : `بقي ${questions.length - answeredCount} سؤالًا.`}
+            : `${remainingQuestions(questions.length - answeredCount)}.`}
         </p>
         <div className="flex w-full gap-2 sm:w-auto">
           <LinkButton href="/dashboard" variant="ghost" size="lg">
