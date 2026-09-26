@@ -27,15 +27,31 @@ export function AppHeader({
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
 
+  /**
+   * قائمة واحدة مفتوحة في كل مرّة: كانت قائمة الحساب وقائمة الهاتف تنفتحان
+   * معًا فتتراكبان. النقر خارج الترويسة أو Esc يغلق المفتوح.
+   * pointerdown لا mousedown: يصل فورًا مع اللمس بدل انتظار أحداث الفأرة
+   * المحاكاة بعد رفع الإصبع.
+   */
   useEffect(() => {
-    const onClick = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setMenuOpen(false);
-      }
+    const onPointer = (e: PointerEvent) => {
+      const target = e.target as Node;
+      if (menuRef.current && !menuRef.current.contains(target)) setMenuOpen(false);
+      if (headerRef.current && !headerRef.current.contains(target)) setMobileOpen(false);
     };
-    document.addEventListener("mousedown", onClick);
-    return () => document.removeEventListener("mousedown", onClick);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      setMenuOpen(false);
+      setMobileOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
   }, []);
 
   useEffect(() => {
@@ -51,7 +67,7 @@ export function AppHeader({
   const hideNav = dense ? "xl:hidden" : "md:hidden";
 
   return (
-    <header className="sticky top-0 z-40 border-b border-cream-300 bg-white/90 backdrop-blur">
+    <header ref={headerRef} className="sticky top-0 z-40 border-b border-cream-300 bg-white/90 backdrop-blur">
       <div className="container-page flex h-16 items-center gap-4">
         <Logo />
 
@@ -92,7 +108,10 @@ export function AppHeader({
           <div className="relative" ref={menuRef}>
             <button
               type="button"
-              onClick={() => setMenuOpen((v) => !v)}
+              onClick={() => {
+                setMenuOpen((v) => !v);
+                setMobileOpen(false);
+              }}
               aria-expanded={menuOpen}
               className="flex items-center gap-2 rounded-xl px-1.5 py-1.5 transition-colors hover:bg-cream-100"
             >
@@ -152,7 +171,10 @@ export function AppHeader({
 
           <button
             type="button"
-            onClick={() => setMobileOpen((v) => !v)}
+            onClick={() => {
+              setMobileOpen((v) => !v);
+              setMenuOpen(false);
+            }}
             className={`grid size-10 place-items-center rounded-xl border border-cream-300 text-lg text-ink-800 ${hideNav}`}
             aria-label="القائمة"
           >
