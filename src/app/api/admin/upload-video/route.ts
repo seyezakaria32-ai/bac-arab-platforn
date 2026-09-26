@@ -40,7 +40,8 @@ export async function POST(req: Request) {
   if (declared > MAX_BYTES) return fail("حجم الفيديو يتجاوز ٣٠٠ ميغابايت", 413);
   if (!req.body) return fail("لم يُرسَل أي ملف", 400);
 
-  const dir = path.join(
+  // resolve لا join — انظر saveUpload في src/lib/storage.ts
+  const dir = path.resolve(
     process.cwd(),
     process.env.STORAGE_LOCAL_DIR ?? "uploads",
     "videos",

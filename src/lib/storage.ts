@@ -41,7 +41,11 @@ export async function saveUpload(
     // خارج public عمدًا: تُقدَّم عبر مسار /uploads حتى تعمل بعد النشر،
     // وعلى الخادم يشير المتغيّر إلى قرص دائم (مثال: /data/uploads)
     const baseDir = process.env.STORAGE_LOCAL_DIR ?? "uploads";
-    const dir = path.join(process.cwd(), baseDir, safeFolder);
+    // resolve لا join: join يُلحق المسار المطلق بمجلّد المشروع، فكان
+    // STORAGE_LOCAL_DIR=/data/uploads يكتب في /app/data/uploads — داخل الحاوية
+    // التي تُمسح مع كل نشر، وبعيدًا عمّا يقرأ منه مسار /uploads
+    // (src/app/uploads/[...path]/route.ts يستعمل resolve أصلًا)
+    const dir = path.resolve(process.cwd(), baseDir, safeFolder);
     await mkdir(dir, { recursive: true });
     const buffer = Buffer.from(await file.arrayBuffer());
     await writeFile(path.join(dir, name), buffer);
