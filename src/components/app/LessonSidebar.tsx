@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import type { Curriculum } from "@/lib/curriculum";
 import { ProgressBar, Badge } from "@/components/ui";
+import { Collapse } from "@/components/ui/Collapse";
 import {
   IconCheckCircle,
   IconPlayCircle,
@@ -72,7 +73,7 @@ export function LessonSidebar({
                     className="flex w-full items-start gap-2 px-4 py-3 text-right transition-colors hover:bg-cream-50"
                   >
                     <IconChevronDown
-                      className={`mt-0.5 shrink-0 text-ink-300 transition-transform ${
+                      className={`mt-0.5 shrink-0 text-ink-300 transition-transform duration-300 ${
                         isOpen ? "rotate-180" : ""
                       }`}
                     />
@@ -96,7 +97,7 @@ export function LessonSidebar({
                     )}
                   </button>
 
-                  {isOpen && (
+                  <Collapse open={Boolean(isOpen)}>
                     <ul className="bg-cream-50/60 pb-1">
                       {mod.lessons.map((lesson, i) => {
                         const active = lesson.id === activeLessonId;
@@ -178,7 +179,7 @@ export function LessonSidebar({
                         </li>
                       )}
                     </ul>
-                  )}
+                  </Collapse>
                 </div>
               );
             })}

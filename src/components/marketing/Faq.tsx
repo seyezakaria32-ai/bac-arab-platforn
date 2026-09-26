@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { IconChevronDown } from "@/components/ui/icons";
+import { Collapse } from "@/components/ui/Collapse";
 
 const ITEMS = [
   {
@@ -39,12 +40,20 @@ const ITEMS = [
 ];
 
 export function Faq() {
-  const [open, setOpen] = useState<number | null>(0);
+  // عدّة أجوبة مفتوحة معًا، كي لا يطوي فتحُ سؤال جوابًا فوقه فتقفز الصفحة
+  const [open, setOpen] = useState<Set<number>>(() => new Set([0]));
+  const toggle = (i: number) =>
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
 
   return (
     <div className="mx-auto max-w-3xl space-y-3">
       {ITEMS.map((item, i) => {
-        const isOpen = open === i;
+        const isOpen = open.has(i);
         return (
           <div
             key={item.q}
@@ -54,7 +63,7 @@ export function Faq() {
           >
             <button
               type="button"
-              onClick={() => setOpen(isOpen ? null : i)}
+              onClick={() => toggle(i)}
               aria-expanded={isOpen}
               className="flex w-full items-center gap-3 px-5 py-4 text-right transition-colors hover:bg-cream-50"
             >
@@ -67,11 +76,11 @@ export function Faq() {
                 {item.q}
               </span>
             </button>
-            {isOpen && (
+            <Collapse open={isOpen}>
               <p className="border-t border-cream-200 px-5 py-4 text-[14px] leading-loose text-ink-700">
                 {item.a}
               </p>
-            )}
+            </Collapse>
           </div>
         );
       })}
