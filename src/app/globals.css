@@ -232,6 +232,35 @@ h4 {
   animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
+/* ── الظهور عند التمرير (يديره components/marketing/ScrollReveal) ──
+   الإخفاء مشروط بـ .reveal-on على <html>، ولا يضيفه إلا المكوّن بعد تشغيله:
+   دون JavaScript يبقى كل شيء ظاهرًا.
+   transform لا translate: فئات Tailwind 4 مثل translate-y-3 تستعمل الخاصيّة
+   المستقلّة translate، فتجتمع الحركتان بدل أن تلغي إحداهما الأخرى. */
+.reveal-on [data-reveal] {
+  --reveal-x: 0px;
+  --reveal-y: 28px;
+  --reveal-scale: 1;
+  opacity: 0;
+  transform: translate3d(var(--reveal-x), var(--reveal-y), 0) scale(var(--reveal-scale));
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 0.85s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    /* ما قد يحرّكه العنصر نفسه عند المرور بالفأرة (ظلّ البطاقات) */
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+.reveal-on [data-reveal="zoom"] { --reveal-y: 16px; --reveal-scale: 0.95; }
+/* start/end بحسب اتجاه القراءة: في العربية «البداية» يمين الشاشة */
+.reveal-on [data-reveal="start"] { --reveal-y: 0px; --reveal-x: -40px; }
+.reveal-on [data-reveal="end"] { --reveal-y: 0px; --reveal-x: 40px; }
+[dir="rtl"].reveal-on [data-reveal="start"] { --reveal-x: 40px; }
+[dir="rtl"].reveal-on [data-reveal="end"] { --reveal-x: -40px; }
+.reveal-on [data-reveal].is-visible {
+  opacity: 1;
+  transform: none;
+}
+
 /* الطباعة — تُستعمل خاصةً في شهادة إتمام البرنامج */
 @media print {
   header,

@@ -6,6 +6,8 @@ import { getSettings } from "@/lib/settings";
 import { formatPrice, planFeatures } from "@/lib/payments/service";
 import { BRAND } from "@/lib/constants";
 import { Badge, LinkButton } from "@/components/ui";
+import { CountUp } from "@/components/marketing/CountUp";
+import { reveal } from "@/lib/reveal";
 import {
   IconCheck,
   IconClock,
@@ -58,7 +60,7 @@ function SectionTitle({
   align?: "center" | "start";
 }) {
   return (
-    <div className={align === "center" ? "mx-auto max-w-2xl text-center" : ""}>
+    <div {...reveal()} className={align === "center" ? "mx-auto max-w-2xl text-center" : ""}>
       {eyebrow && (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-[12px] font-bold text-brand-700 ring-1 ring-brand-200">
           <IconSparkle className="text-[11px]" />
@@ -151,7 +153,7 @@ export default async function LandingPage() {
                 <div key={s.label}>
                   <dt className="text-[12px] text-brand-100/70">{s.label}</dt>
                   <dd className="num font-display text-2xl font-black text-white sm:text-3xl">
-                    {s.value}
+                    <CountUp value={s.value} />
                   </dd>
                 </div>
               ))}
@@ -201,8 +203,8 @@ export default async function LandingPage() {
           { icon: <IconUsers />, title: "طلبة البكالوريا", desc: "محتوى مُفصَّل على الامتحان الوطني" },
           { icon: <IconTarget />, title: "تدرّج إجباري", desc: "درس بعد درس، بلا قفز فوق الأساسيات" },
           { icon: <IconAward />, title: "إثبات إتمام", desc: "شهادة عند إكمال البرنامج" },
-        ].map((f) => (
-          <div key={f.title} className="card flex items-start gap-3 p-5">
+        ].map((f, i) => (
+          <div key={f.title} {...reveal("up", i)} className="card flex items-start gap-3 p-5">
             <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-brand-50 text-lg text-brand-600">
               {f.icon}
             </span>
@@ -224,7 +226,7 @@ export default async function LandingPage() {
       {introEmbed.kind !== "none" && (
         <section id="video" className="container-page scroll-mt-24 pt-16 md:pt-20">
           <div className="mx-auto max-w-4xl">
-            <div className="mb-7 text-center">
+            <div {...reveal()} className="mb-7 text-center">
               <Badge tone="brand" className="mb-3">
                 <IconPlayCircle />
                 فيديو تعريفي
@@ -239,7 +241,7 @@ export default async function LandingPage() {
               )}
             </div>
 
-            <div className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-ink-900/10">
+            <div {...reveal("zoom", 1)} className="overflow-hidden rounded-3xl shadow-2xl ring-1 ring-ink-900/10">
               <IntroVideo
                 embed={introEmbed}
                 poster={intro.poster || settings["site.heroImage"]}
@@ -247,7 +249,7 @@ export default async function LandingPage() {
               />
             </div>
 
-            <div className="mt-6 flex justify-center">
+            <div {...reveal("up", 2)} className="mt-6 flex justify-center">
               <LinkButton href="#plans" size="lg">
                 سجّل الآن وابدأ الدرس الأول
                 <IconArrowNext className="text-lg" />
@@ -266,7 +268,7 @@ export default async function LandingPage() {
               eyebrow="عن البرنامج"
               title="ابدأ اليوم، وتعلّم بالوتيرة التي تناسبك"
             />
-            <div className="mt-5 space-y-4 text-[15px] leading-loose text-ink-700">
+            <div {...reveal("up", 1)} className="mt-5 space-y-4 text-[15px] leading-loose text-ink-700">
               <p>
                 معظم الطلبة لا يخسرون النقط لأنهم لا يعرفون الدروس، بل لأنهم لا
                 يعرفون <strong>كيف يكتبون</strong> ما يعرفونه. هذا البرنامج مبنيّ
@@ -292,8 +294,8 @@ export default async function LandingPage() {
                 { k: "مدّة الوصول", v: "طوال موسم البكالوريا" },
                 { k: "الوتيرة المقترحة", v: BRAND.duration },
                 { k: "الفئة المستهدفة", v: BRAND.audience },
-              ].map((item) => (
-                <div key={item.k} className="card px-4 py-3">
+              ].map((item, i) => (
+                <div key={item.k} {...reveal("up", i + 1)} className="card px-4 py-3">
                   <p className="text-[12px] font-medium text-ink-500">{item.k}</p>
                   <p className="mt-0.5 font-display text-[15px] font-bold text-ink-900">
                     {item.v}
@@ -308,6 +310,7 @@ export default async function LandingPage() {
             {settings["site.gallery"].map((img, i) => (
               <div
                 key={`${img.src}-${i}`}
+                {...reveal("zoom", i)}
                 className={`relative aspect-[760/853] overflow-hidden rounded-2xl ring-1 ring-cream-300 ${
                   i % 3 === 0 ? "translate-y-3" : ""
                 }`}
@@ -380,8 +383,12 @@ export default async function LandingPage() {
                   },
                 ],
               },
-            ].map((track) => (
-              <div key={track.title} className="card overflow-hidden">
+            ].map((track, i) => (
+              <div
+                key={track.title}
+                {...reveal(i === 0 ? "start" : "end", 1)}
+                className="card overflow-hidden"
+              >
                 <div
                   className={`flex items-center gap-3 px-5 py-4 text-white ${track.color}`}
                 >
@@ -419,7 +426,7 @@ export default async function LandingPage() {
           description="اطّلع على كل وحدة ودرس قبل أن تسجّل. لا شيء مخفيّ — تعرف بالضبط ما الذي ستحصل عليه."
         />
 
-        <div className="mt-12">
+        <div {...reveal("up", 1)} className="mt-12">
           {tracks.length ? (
             <CurriculumAccordion tracks={tracks} />
           ) : (
@@ -461,8 +468,8 @@ export default async function LandingPage() {
                 t: "اختبر ثم تقدّم",
                 d: "في نهاية كل وحدة اختبار قصير؛ باجتيازه تُفتح الوحدة التالية.",
               },
-            ].map((step) => (
-              <li key={step.n} className="card relative p-5">
+            ].map((step, i) => (
+              <li key={step.n} {...reveal("up", i)} className="card relative p-5">
                 <span className="num grid size-10 place-items-center rounded-xl bg-brand-500 font-display text-lg font-black text-ink-900">
                   {step.n}
                 </span>
@@ -487,13 +494,14 @@ export default async function LandingPage() {
         />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2 lg:gap-8">
-          {plans.map((plan) => {
+          {plans.map((plan, i) => {
             const features = planFeatures(plan);
             const highlighted = plan.isHighlighted;
 
             return (
               <div
                 key={plan.id}
+                {...reveal("zoom", i)}
                 className={`relative flex flex-col overflow-hidden rounded-3xl border-2 bg-white transition-shadow hover:shadow-lg ${
                   highlighted
                     ? "border-gold-400 shadow-md"
@@ -572,7 +580,7 @@ export default async function LandingPage() {
           })}
         </div>
 
-        <p className="mt-8 flex items-center justify-center gap-2 text-center text-[13px] text-ink-500">
+        <p {...reveal()} className="mt-8 flex items-center justify-center gap-2 text-center text-[13px] text-ink-500">
           <IconShield className="text-base text-brand-600" />
           لا يُفتح محتوى البرنامج قبل تأكيد عملية الدفع — حسابك ومعلوماتك محميّة.
         </p>
@@ -582,7 +590,7 @@ export default async function LandingPage() {
       <section id="faq" className="scroll-mt-24 bg-white py-20 md:py-24">
         <div className="container-page">
           <SectionTitle eyebrow="أسئلة شائعة" title="كل ما قد يدور في ذهنك" />
-          <div className="mt-12">
+          <div {...reveal("up", 1)} className="mt-12">
             <Faq />
           </div>
         </div>
@@ -590,7 +598,7 @@ export default async function LandingPage() {
 
       {/* ════════════════════ نداء أخير ════════════════════ */}
       <section className="container-page py-16">
-        <div className="brand-gradient brand-texture relative overflow-hidden rounded-3xl px-6 py-14 text-center text-white sm:px-12">
+        <div {...reveal("zoom")} className="brand-gradient brand-texture relative overflow-hidden rounded-3xl px-6 py-14 text-center text-white sm:px-12">
           <Badge tone="brand" className="bg-white/10 text-brand-100 ring-white/20">
             التسجيل مفتوح
           </Badge>
