@@ -198,6 +198,19 @@ if (push.status !== 0) {
   fail("فشل إنشاء جداول قاعدة البيانات (prisma db push).");
 }
 
+// قاعدة جديدة فارغة ← تُعبَّأ بالبرنامج والدروس تلقائيًا. على خادم مستضاف لا
+// توجد طرفية سهلة لتشغيل `npm run db:seed`، وتشغيله من الحاسوب يعبّئ القاعدة
+// المحلّية لا قاعدة الموقع. --if-empty يجعله لا يلمس قاعدة فيها محتوى أبدًا.
+const tsxCli = entry("tsx", "dist", "cli.mjs");
+const seed = existsSync(tsxCli)
+  ? spawnSync(process.execPath, [tsxCli, path.join("prisma", "seed.ts"), "--if-empty"], {
+      stdio: "inherit",
+    })
+  : { status: 1 };
+if (seed.status !== 0) {
+  console.warn("[start] تعذّرت تعبئة المحتوى الأوّلي — الموقع يعمل، لكن البرنامج فارغ.");
+}
+
 // غير قاتل: فشل مزامنة المسؤول يُسجَّل ولا يمنع الطلبة من الوصول للموقع
 runNode(path.join(process.cwd(), "scripts", "sync-admin.mjs"), [], "سكربت مزامنة المسؤول");
 

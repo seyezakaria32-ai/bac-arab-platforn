@@ -741,6 +741,13 @@ function slugify(prefix: string, i: number) {
 const isProduction = process.env.NODE_ENV === "production";
 
 async function main() {
+  // --if-empty: وضع الإقلاع التلقائي. يعبّئ قاعدة جديدة فقط، ولا يلمس قاعدة
+  // فيها برنامج — البذر يحذف المسارات والدروس، ومعها تقدّم الطلبة.
+  if (process.argv.includes("--if-empty") && (await db.course.count()) > 0) {
+    console.log("[seed] المحتوى موجود — لا حاجة للبذر.");
+    return;
+  }
+
   // الفحص قبل أيّ كتابة: البذر يحذف المسارات والدروس ثمّ يعيد بناءها،
   // فالتوقّف في منتصفه يترك القاعدة ناقصة بلا حساب مسؤول.
   if (isProduction && !process.env.ADMIN_PASSWORD) {

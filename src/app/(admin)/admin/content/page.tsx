@@ -43,7 +43,7 @@ export default async function AdminContentPage() {
       <div className="container-page py-16">
         <EmptyState
           title="لا يوجد برنامج"
-          description="شغّل npm run db:seed لإنشاء البرنامج والمنهج."
+          description="يُنشأ البرنامج والمنهج تلقائيًا عند إقلاع الخادم. أعد النشر، وإن بقيت الصفحة فارغة فراجع سجلّ الإقلاع (الأسطر التي تبدأ بـ [seed] و[start])."
         />
       </div>
     );
