@@ -49,6 +49,13 @@ export const IconPlay = (p: P) => (
   </Svg>
 );
 
+export const IconPause = (p: P) => (
+  <Svg {...p}>
+    <rect x="7" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none" />
+    <rect x="13.8" y="6" width="3.2" height="12" rx="1" fill="currentColor" stroke="none" />
+  </Svg>
+);
+
 export const IconPlayCircle = (p: P) => (
   <Svg {...p}>
     <circle cx="12" cy="12" r="9" />

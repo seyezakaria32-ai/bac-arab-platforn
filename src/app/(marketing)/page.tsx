@@ -7,6 +7,7 @@ import { formatPrice, planFeatures } from "@/lib/payments/service";
 import { BRAND } from "@/lib/constants";
 import { Badge, LinkButton } from "@/components/ui";
 import { CountUp } from "@/components/marketing/CountUp";
+import { PosterSlider } from "@/components/marketing/PosterSlider";
 import { reveal } from "@/lib/reveal";
 import {
   IconCheck,
@@ -305,25 +306,9 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* الشبكة تُدار من لوحة الإدارة ← الواجهة */}
-          <div className="grid grid-cols-2 gap-3">
-            {settings["site.gallery"].map((img, i) => (
-              <div
-                key={`${img.src}-${i}`}
-                {...reveal("zoom", i)}
-                className={`relative aspect-[760/853] overflow-hidden rounded-2xl ring-1 ring-cream-300 ${
-                  i % 3 === 0 ? "translate-y-3" : ""
-                }`}
-              >
-                <Image
-                  src={img.src}
-                  alt={img.alt}
-                  fill
-                  sizes="(max-width: 1024px) 45vw, 250px"
-                  className="object-cover"
-                />
-              </div>
-            ))}
+          {/* الملصقات تُدار من لوحة الإدارة ← الواجهة */}
+          <div {...reveal("zoom", 1)}>
+            <PosterSlider posters={settings["site.gallery"]} />
           </div>
         </div>
       </section>
