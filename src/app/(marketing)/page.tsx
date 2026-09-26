@@ -327,7 +327,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterAbout"]} />
+      <BlockSlot tight blocks={blocks["home.afterAbout"]} />
 
       {/* ════════════════════ ماذا ستتعلّم ════════════════════ */}
       <section id="learn" className="scroll-mt-24 bg-white py-20 md:py-24">
@@ -440,7 +440,7 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterCurriculum"]} />
+      <BlockSlot tight blocks={blocks["home.afterCurriculum"]} />
 
       {/* ════════════════════ رحلة الطالب ════════════════════ */}
       <section className="bg-white py-20 md:py-24">
@@ -593,7 +593,7 @@ export default async function LandingPage() {
         </p>
       </section>
 
-      <BlockSlot blocks={blocks["home.afterPlans"]} />
+      <BlockSlot tight blocks={blocks["home.afterPlans"]} />
 
       {/* ════════════════════ الأسئلة الشائعة ════════════════════ */}
       <section id="faq" className="scroll-mt-24 bg-white py-20 md:py-24">

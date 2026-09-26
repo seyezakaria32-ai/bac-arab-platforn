@@ -16,6 +16,7 @@ export function BlockSlot({
   bare = false,
   align = "center",
   dark = false,
+  tight = false,
   className = "",
 }: {
   blocks?: Block[];
@@ -23,6 +24,13 @@ export function BlockSlot({
   align?: "center" | "start";
   /** خلفية الموضع داكنة (الواجهة الأولى) */
   dark?: boolean;
+  /**
+   * الموضع يلي قسمًا بلون الخلفية نفسه (كريمي) وبهامش سفلي كبير: الهامشان
+   * كانا يتراكمان (96px + 48px) فيبدو الزرّ منفصلًا عمّا فوقه. نسحب الموضع
+   * إلى داخل هامش القسم السابق. لا يُستعمل بعد قسم أبيض، وإلا ظهر الزرّ
+   * نصفه على الأبيض ونصفه على الكريمي.
+   */
+  tight?: boolean;
   className?: string;
 }) {
   if (!blocks?.length) return null;
@@ -62,7 +70,13 @@ export function BlockSlot({
   const onlyButtons = blocks.every((b) => b.kind === "button");
   return (
     <section
-      className={`container-page space-y-12 ${onlyButtons ? "py-10 md:py-12" : "py-12 md:py-16"} ${className}`}
+      className={`container-page space-y-12 ${
+        tight
+          ? "-mt-10 pt-0 md:-mt-14"
+          : onlyButtons
+            ? "pt-10 md:pt-12"
+            : "pt-12 md:pt-16"
+      } ${onlyButtons ? "pb-10 md:pb-12" : "pb-12 md:pb-16"} ${className}`}
     >
       {content}
     </section>
