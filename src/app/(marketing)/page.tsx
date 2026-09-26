@@ -7,7 +7,8 @@ import { formatPrice, planFeatures } from "@/lib/payments/service";
 import { BRAND } from "@/lib/constants";
 import { Badge, LinkButton } from "@/components/ui";
 import { CountUp } from "@/components/marketing/CountUp";
-import { PosterSlider } from "@/components/marketing/PosterSlider";
+import { SliderSlot } from "@/components/marketing/SliderSlot";
+import { ensureDefaultSlider, getSlidersByPlacement } from "@/lib/sliders";
 import { reveal } from "@/lib/reveal";
 import {
   IconCheck,
@@ -79,11 +80,14 @@ function SectionTitle({
 }
 
 export default async function LandingPage() {
-  const [course, plans, settings] = await Promise.all([
+  await ensureDefaultSlider().catch(() => {});
+  const [course, plans, settings, sliders] = await Promise.all([
     getPublicCurriculum(),
     db.plan.findMany({ where: { isActive: true }, orderBy: { order: "asc" } }),
     getSettings(),
+    getSlidersByPlacement("home"),
   ]);
+  const aboutSliders = sliders["home.about"];
 
   const intro = settings["site.introVideo"];
   const introEmbed = toEmbed(intro.url);
@@ -222,6 +226,8 @@ export default async function LandingPage() {
         ))}
       </section>
 
+      <SliderSlot sliders={sliders["home.top"]} />
+
       {/* ════════════════════ فيديو التعريف ════════════════════
           يُدار من لوحة الإدارة ← الواجهة، ولا يظهر ما دام الرابط فارغًا */}
       {introEmbed.kind !== "none" && (
@@ -262,7 +268,9 @@ export default async function LandingPage() {
 
       {/* ════════════════════ عن البرنامج ════════════════════ */}
       <section id="about" className="container-page scroll-mt-24 py-20 md:py-24">
-        <div className="grid gap-12 lg:grid-cols-[1fr_.85fr] lg:items-center">
+        <div
+          className={`grid gap-12 lg:items-center ${aboutSliders ? "lg:grid-cols-[1fr_.85fr]" : "max-w-3xl"}`}
+        >
           <div>
             <SectionTitle
               align="start"
@@ -306,12 +314,12 @@ export default async function LandingPage() {
             </div>
           </div>
 
-          {/* الملصقات تُدار من لوحة الإدارة ← الواجهة */}
-          <div {...reveal("zoom", 1)}>
-            <PosterSlider posters={settings["site.gallery"]} />
-          </div>
+          {/* يُدار من لوحة الإدارة ← السلايدر، الموضع «داخل عن البرنامج» */}
+          <SliderSlot bare sliders={aboutSliders} />
         </div>
       </section>
+
+      <SliderSlot sliders={sliders["home.afterAbout"]} />
 
       {/* ════════════════════ ماذا ستتعلّم ════════════════════ */}
       <section id="learn" className="scroll-mt-24 bg-white py-20 md:py-24">
@@ -403,6 +411,8 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      <SliderSlot sliders={sliders["home.afterLearn"]} />
+
       {/* ════════════════════ المنهج الدراسي ════════════════════ */}
       <section id="curriculum" className="container-page scroll-mt-24 py-20 md:py-24">
         <SectionTitle
@@ -421,6 +431,8 @@ export default async function LandingPage() {
           )}
         </div>
       </section>
+
+      <SliderSlot sliders={sliders["home.afterCurriculum"]} />
 
       {/* ════════════════════ رحلة الطالب ════════════════════ */}
       <section className="bg-white py-20 md:py-24">
@@ -469,6 +481,8 @@ export default async function LandingPage() {
           </ol>
         </div>
       </section>
+
+      <SliderSlot sliders={sliders["home.afterSteps"]} />
 
       {/* ════════════════════ الباقات ════════════════════ */}
       <section id="plans" className="container-page scroll-mt-24 py-20 md:py-24">
@@ -571,6 +585,8 @@ export default async function LandingPage() {
         </p>
       </section>
 
+      <SliderSlot sliders={sliders["home.afterPlans"]} />
+
       {/* ════════════════════ الأسئلة الشائعة ════════════════════ */}
       <section id="faq" className="scroll-mt-24 bg-white py-20 md:py-24">
         <div className="container-page">
@@ -580,6 +596,8 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      <SliderSlot sliders={sliders["home.afterFaq"]} />
 
       {/* ════════════════════ نداء أخير ════════════════════ */}
       <section className="container-page py-16">

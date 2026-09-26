@@ -46,18 +46,18 @@ model User {
 
 /// البرنامج التدريبي الكامل (الدليل الشامل لمنهجية الإجابة)
 model Course {
-  id          String   @id @default(cuid())
-  slug        String   @unique
-  title       String
-  subtitle    String?
-  description String?
-  coverImage  String?
-  instructor  String?
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  title        String
+  subtitle     String?
+  description  String?
+  coverImage   String?
+  instructor   String?
   durationText String? // مثال: "شهران"
-  isPublished Boolean  @default(true)
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isPublished  Boolean  @default(true)
+  order        Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   tracks        Track[]
   subscriptions Subscription[]
@@ -67,15 +67,15 @@ model Course {
 
 /// المادة: التاريخ أو الجغرافيا
 model Track {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   courseId    String
   slug        String
   title       String
   description String?
   icon        String? // اسم أيقونة أو رمز
   color       String? // لون مميز للمسار
-  order       Int      @default(0)
-  isPublished Boolean  @default(true)
+  order       Int     @default(0)
+  isPublished Boolean @default(true)
 
   course  Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   modules Module[]
@@ -86,12 +86,12 @@ model Track {
 
 /// الوحدة داخل المسار
 model Module {
-  id          String   @id @default(cuid())
-  trackId     String
-  title       String
-  description String?
-  order       Int      @default(0)
-  isPublished Boolean  @default(true)
+  id           String  @id @default(cuid())
+  trackId      String
+  title        String
+  description  String?
+  order        Int     @default(0)
+  isPublished  Boolean @default(true)
   /// الباقة المطلوبة للوصول: start | premium
   requiredPlan String  @default("start")
 
@@ -104,31 +104,31 @@ model Module {
 
 /// الدرس
 model Lesson {
-  id             String  @id @default(cuid())
-  moduleId       String
-  title          String
-  slug           String
-  order          Int     @default(0)
+  id              String   @id @default(cuid())
+  moduleId        String
+  title           String
+  slug            String
+  order           Int      @default(0)
   /// نوع المحتوى: video | text | mixed
-  contentType    String  @default("video")
-  videoUrl       String?
+  contentType     String   @default("video")
+  videoUrl        String?
   /// مزوّد الفيديو: youtube | vimeo | bunny | mux | direct
-  videoProvider  String  @default("youtube")
-  durationMinutes Int    @default(0)
-  summary        String?
+  videoProvider   String   @default("youtube")
+  durationMinutes Int      @default(0)
+  summary         String?
   /// محتوى الدرس (HTML مبسّط)
-  content        String?
+  content         String?
   /// أهداف الدرس (JSON: string[])
-  objectives     String?
+  objectives      String?
   /// تمرين الدرس (نص/HTML)
-  exercise       String?
-  isPublished    Boolean @default(true)
+  exercise        String?
+  isPublished     Boolean  @default(true)
   /// درس مجاني للمعاينة قبل الشراء
-  isFreePreview  Boolean @default(false)
+  isFreePreview   Boolean  @default(false)
   /// الباقة المطلوبة: start | premium
-  requiredPlan   String  @default("start")
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  requiredPlan    String   @default("start")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   module    Module           @relation(fields: [moduleId], references: [id], onDelete: Cascade)
   resources LessonResource[]
@@ -141,16 +141,16 @@ model Lesson {
 
 /// الملفات والموارد المرفقة بالدرس
 model LessonResource {
-  id           String @id @default(cuid())
+  id           String  @id @default(cuid())
   lessonId     String
   title        String
   /// pdf | doc | image | link | audio
-  type         String @default("pdf")
+  type         String  @default("pdf")
   url          String
   sizeLabel    String?
-  order        Int    @default(0)
+  order        Int     @default(0)
   /// start | premium
-  requiredPlan String @default("start")
+  requiredPlan String  @default("start")
 
   lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 
@@ -217,15 +217,15 @@ model Quiz {
 }
 
 model Question {
-  id          String  @id @default(cuid())
-  quizId      String
+  id              String  @id @default(cuid())
+  quizId          String
   /// mcq | multi | true_false | short | open
-  type        String  @default("mcq")
-  prompt      String
-  hint        String?
-  explanation String?
-  points      Int     @default(1)
-  order       Int     @default(0)
+  type            String  @default("mcq")
+  prompt          String
+  hint            String?
+  explanation     String?
+  points          Int     @default(1)
+  order           Int     @default(0)
   /// للأسئلة القصيرة: الإجابات المقبولة (JSON: string[])
   acceptedAnswers String?
 
@@ -275,29 +275,29 @@ model QuizAttempt {
 // ──────────────────────── الباقات والاشتراك والدفع ────────────────────────
 
 model Plan {
-  id          String  @id @default(cuid())
+  id                String   @id @default(cuid())
   /// START | PREMIUM_ELITE
-  code        String  @unique
-  name        String
-  tagline     String?
-  description String?
+  code              String   @unique
+  name              String
+  tagline           String?
+  description       String?
   /// السعر بأصغر وحدة نقدية (سنت/سنتيم)
-  priceCents  Int     @default(0)
+  priceCents        Int      @default(0)
   /// السعر قبل التخفيض (اختياري)
   comparePriceCents Int?
-  currency    String  @default("XOF")
+  currency          String   @default("XOF")
   /// مدة الوصول بالأيام (0 = مدى الحياة)
-  durationDays Int    @default(0)
+  durationDays      Int      @default(0)
   /// المزايا (JSON: {label:string, included:boolean}[])
-  features    String  @default("[]")
+  features          String   @default("[]")
   /// صلاحيات قابلة للتعديل من لوحة الإدارة (JSON: object)
-  capabilities String @default("{}")
-  badge       String?
-  isHighlighted Boolean @default(false)
-  isActive    Boolean @default(true)
-  order       Int     @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  capabilities      String   @default("{}")
+  badge             String?
+  isHighlighted     Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  order             Int      @default(0)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   subscriptions Subscription[]
   payments      Payment[]
@@ -315,9 +315,9 @@ model Subscription {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  plan   Plan   @relation(fields: [planId], references: [id])
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course   Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
   payments Payment[]
 
   @@unique([userId, courseId])
@@ -394,12 +394,12 @@ model Coupon {
 // ──────────────────────────── الشهادات والإعدادات ────────────────────────────
 
 model Certificate {
-  id        String   @id @default(cuid())
-  userId    String
-  courseId  String
-  serial    String   @unique
-  grade     String?
-  issuedAt  DateTime @default(now())
+  id       String   @id @default(cuid())
+  userId   String
+  courseId String
+  serial   String   @unique
+  grade    String?
+  issuedAt DateTime @default(now())
 
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   course Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
@@ -414,4 +414,48 @@ model Setting {
   group     String   @default("general")
   label     String?
   updatedAt DateTime @updatedAt
+}
+
+// ──────────────────────────── عارضات الصور (Sliders) ────────────────────────────
+
+/// عارض صور يُدار من لوحة الإدارة ويُعرض في موضع محدّد من الموقع
+model Slider {
+  id         String   @id @default(cuid())
+  /// اسم داخلي يظهر في لوحة الإدارة فقط
+  name       String
+  /// عنوان اختياري يظهر للزوّار فوق العارض
+  title      String?
+  /// مفتاح الموضع — انظر SLIDER_PLACEMENTS في src/lib/sliders.ts
+  placement  String
+  /// الترتيب بين عدّة عارضات في الموضع نفسه
+  order      Int      @default(0)
+  /// عدد الصور الظاهرة معًا على الحاسوب (الهاتف يعرض صورة واحدة دائمًا)
+  perView    Int      @default(2)
+  /// مدّة بقاء الصورة قبل الانتقال
+  intervalMs Int      @default(2000)
+  /// شكل الإطار: poster | square | landscape | banner
+  aspect     String   @default("poster")
+  autoplay   Boolean  @default(true)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  slides Slide[]
+
+  @@index([placement, isActive])
+}
+
+model Slide {
+  id        String   @id @default(cuid())
+  sliderId  String
+  imageUrl  String
+  alt       String   @default("")
+  /// رابط اختياري عند النقر على الصورة (صفحة في الموقع أو رابط خارجي)
+  linkUrl   String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  slider Slider @relation(fields: [sliderId], references: [id], onDelete: Cascade)
+
+  @@index([sliderId, order])
 }

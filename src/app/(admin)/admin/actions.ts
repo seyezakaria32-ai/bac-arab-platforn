@@ -856,40 +856,6 @@ export async function saveSiteImageAction(
   };
 }
 
-export async function removeSiteImageAction(
-  index: number,
-): Promise<AdminResult> {
-  await guard();
-  const settings = await getSettings();
-  const gallery = settings["site.gallery"].filter((_, i) => i !== index);
-  if (gallery.length < 2) {
-    return { ok: false, message: "يجب إبقاء صورتين على الأقل في الشبكة" };
-  }
-  await setSetting("site.gallery", gallery, "site");
-  revalidatePath("/");
-  refresh();
-  return { ok: true, message: "حُذفت الصورة من الشبكة" };
-}
-
-/** تحريك صورة داخل الشبكة */
-export async function moveSiteImageAction(
-  index: number,
-  direction: "up" | "down",
-): Promise<AdminResult> {
-  await guard();
-  const settings = await getSettings();
-  const gallery = [...settings["site.gallery"]];
-  const target = direction === "up" ? index - 1 : index + 1;
-  if (target < 0 || target >= gallery.length) {
-    return { ok: false, message: "لا يمكن التحريك أبعد من ذلك" };
-  }
-  [gallery[index], gallery[target]] = [gallery[target], gallery[index]];
-  await setSetting("site.gallery", gallery, "site");
-  revalidatePath("/");
-  refresh();
-  return { ok: true, message: "تمّ الترتيب" };
-}
-
 /**
  * فيديو التعريف في الصفحة الرئيسية.
  * الرابط إمّا يوتيوب/فيميو، أو مسار ملف رُفع عبر /api/admin/upload-video.

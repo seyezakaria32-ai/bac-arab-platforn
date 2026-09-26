@@ -2,16 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { getSettings, BUNDLED_IMAGES } from "@/lib/settings";
-import {
-  removeSiteImageAction,
-  moveSiteImageAction,
-  resetSiteImagesAction,
-} from "../actions";
+import { resetSiteImagesAction } from "../actions";
 import { SiteImageForm } from "@/components/admin/SiteImageForm";
 import { IntroVideoForm } from "@/components/admin/IntroVideoForm";
 import { ActionButton } from "@/components/admin/Form";
 import { Badge, LinkButton, Alert } from "@/components/ui";
-import { IconTrash, IconPlus, IconArrowNext } from "@/components/ui/icons";
+import { IconArrowNext } from "@/components/ui/icons";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "صور الواجهة" };
@@ -19,7 +15,6 @@ export const metadata: Metadata = { title: "صور الواجهة" };
 export default async function AppearancePage() {
   await requireAdmin();
   const settings = await getSettings();
-  const gallery = settings["site.gallery"];
 
   return (
     <div className="container-page max-w-5xl space-y-7 py-8">
@@ -103,79 +98,21 @@ export default async function AppearancePage() {
         </div>
       </section>
 
-      {/* ── شبكة الملصقات ── */}
-      <section className="space-y-4">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <h2 className="font-display text-[16px] font-black text-ink-900">
-              شبكة الملصقات
-            </h2>
-            <p className="mt-1 text-[13px] text-ink-500">
-              تظهر في قسم «عن البرنامج». الترتيب هنا هو ترتيب العرض —{" "}
-              <span className="num">{gallery.length}</span> من ٨ صور.
-            </p>
-          </div>
-          <Badge tone="ink">نسبة 9:10</Badge>
+      {/* ── العارضات ── */}
+      <section className="card flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+        <div>
+          <h2 className="font-display text-[16px] font-black text-ink-900">
+            ملصقات «عن البرنامج» وعارضات الصور
+          </h2>
+          <p className="mt-1 max-w-xl text-[13px] leading-relaxed text-ink-500">
+            صارت الملصقات عارضًا مستقلًّا: أضف الصور واحذفها ورتّبها، أو أنشئ
+            عارضات جديدة في أيّ موضع من الموقع.
+          </p>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {gallery.map((img, i) => (
-            <div key={`${img.src}-${i}`} className="card p-4">
-              <div className="mb-3 flex items-center justify-between gap-2">
-                <span className="num text-[12px] font-bold text-ink-500">
-                  الموضع {i + 1}
-                </span>
-                <div className="flex items-center gap-0.5">
-                  <ActionButton
-                    action={moveSiteImageAction.bind(null, i, "up")}
-                    tone="ghost"
-                    title="تقديم"
-                  >
-                    ↑
-                  </ActionButton>
-                  <ActionButton
-                    action={moveSiteImageAction.bind(null, i, "down")}
-                    tone="ghost"
-                    title="تأخير"
-                  >
-                    ↓
-                  </ActionButton>
-                  <ActionButton
-                    action={removeSiteImageAction.bind(null, i)}
-                    tone="danger"
-                    confirm={`حذف «${img.alt}» من شبكة الصفحة الرئيسية؟`}
-                    title="حذف"
-                  >
-                    <IconTrash />
-                  </ActionButton>
-                </div>
-              </div>
-
-              <SiteImageForm
-                slot={String(i)}
-                current={img}
-                library={BUNDLED_IMAGES}
-                aspect="760 / 853"
-              />
-            </div>
-          ))}
-
-          {/* إضافة صورة */}
-          {gallery.length < 8 && (
-            <div className="rounded-2xl border-2 border-dashed border-cream-300 bg-cream-50/60 p-4">
-              <h3 className="mb-3 flex items-center gap-2 font-display text-[13.5px] font-black text-ink-900">
-                <IconPlus />
-                إضافة صورة جديدة
-              </h3>
-              <SiteImageForm
-                slot="new"
-                library={BUNDLED_IMAGES}
-                aspect="760 / 853"
-                submitLabel="إضافة إلى الشبكة"
-              />
-            </div>
-          )}
-        </div>
+        <LinkButton href="/admin/sliders" size="sm">
+          إدارة السلايدر
+          <IconArrowNext />
+        </LinkButton>
       </section>
 
       <p className="text-center text-[12.5px] text-ink-500">

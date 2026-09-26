@@ -3,6 +3,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { getCurriculum, type ModuleNode } from "@/lib/curriculum";
 import { getSettings } from "@/lib/settings";
+import { getSlidersByPlacement } from "@/lib/sliders";
+import { SliderSlot } from "@/components/marketing/SliderSlot";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { daysLeft } from "@/lib/subscription-period";
@@ -43,10 +45,13 @@ function ModuleStateIcon({ module }: { module: ModuleNode }) {
 
 export default async function DashboardPage() {
   const user = await requireUser();
-  const [curriculum, settings] = await Promise.all([
+  const [curriculum, settings, sliders] = await Promise.all([
     getCurriculum(user),
     getSettings(),
+    getSlidersByPlacement("dashboard"),
   ]);
+  // إعلانات الإدارة: تظهر لكل طالب مسجَّل، مشتركًا كان أو لا
+  const announcements = <SliderSlot bare sliders={sliders["dashboard.top"]} />;
 
   if (!curriculum) {
     return (
@@ -71,7 +76,8 @@ export default async function DashboardPage() {
     });
 
     return (
-      <div className="container-page max-w-3xl py-12">
+      <div className="container-page max-w-3xl space-y-8 py-12">
+        {announcements}
         <div className="card overflow-hidden">
           <div className="brand-gradient brand-texture px-6 py-10 text-center text-white sm:px-10">
             <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-white/10 text-2xl ring-1 ring-white/20">
@@ -149,6 +155,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="container-page space-y-8 py-8 sm:py-10">
+      {announcements}
       {remaining !== null && remaining <= 5 && (
         <Alert
           tone="warning"
