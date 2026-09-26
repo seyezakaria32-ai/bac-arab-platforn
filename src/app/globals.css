@@ -71,6 +71,23 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* ── ضبط الفقرات من الطرفين (justify) ──
+   داخل @layer base عمدًا لا خارجه: قاعدة خارج الطبقات تغلب فئات Tailwind،
+   فكانت ستُلغي text-center وtext-start حيث وُضعت صراحةً على الفقرة.
+   - الفقرة داخل حاوية متوسّطة (text-center) ترث التوسيط من أبيها لا من
+     نفسها، فتصير مضبوطة من الطرفين وسطرها الأخير في المنتصف — الشكل
+     المعتاد للفقرات المتوسّطة، وسطر وحيد يبقى في المنتصف كما كان.
+   - في غيرها يبقى السطر الأخير على بداية السطر (اليمين في العربية). */
+@layer base {
+  p {
+    text-align: justify;
+    text-justify: inter-word;
+  }
+  .text-center p {
+    text-align-last: center;
+  }
+}
+
 h1, h2, h3, h4 {
   font-weight: 800;
   letter-spacing: -0.01em;
