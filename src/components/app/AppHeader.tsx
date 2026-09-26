@@ -62,9 +62,11 @@ export function AppHeader({
   const initials = user.name.trim().charAt(0);
   // لوحة الإدارة تحمل ٨ روابط + شعارًا عريضًا: عند 1024px يتجاوز السطر الشاشة بـ100px،
   // فلا تظهر القائمة الأفقية إلا من 1280px، وتحت ذلك القائمة المنسدلة
-  const dense = nav.length > 4;
-  const showNav = dense ? "xl:flex" : "md:flex";
-  const hideNav = dense ? "xl:hidden" : "md:hidden";
+  // وبعشرة روابط (بعد إضافة السلايدر والأزرار) تتجاوز 1280px بنحو 40px، فلا
+  // تظهر أفقيًا إلا من 1400px. الفئات مكتوبة كاملة كي يلتقطها Tailwind.
+  const size = nav.length > 9 ? "wide" : nav.length > 4 ? "dense" : "normal";
+  const showNav = { wide: "min-[1400px]:flex", dense: "xl:flex", normal: "md:flex" }[size];
+  const hideNav = { wide: "min-[1400px]:hidden", dense: "xl:hidden", normal: "md:hidden" }[size];
 
   return (
     <header ref={headerRef} className="sticky top-0 z-40 border-b border-cream-300 bg-white/90 backdrop-blur">
@@ -93,7 +95,7 @@ export function AppHeader({
 
         <div
           className={`flex flex-1 items-center justify-end gap-2 ${
-            dense ? "xl:flex-none" : "md:flex-none"
+            { wide: "min-[1400px]:flex-none", dense: "xl:flex-none", normal: "md:flex-none" }[size]
           }`}
         >
           {typeof progressPercent === "number" && (
