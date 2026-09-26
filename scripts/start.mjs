@@ -198,5 +198,8 @@ if (push.status !== 0) {
   fail("فشل إنشاء جداول قاعدة البيانات (prisma db push).");
 }
 
+// غير قاتل: فشل مزامنة المسؤول يُسجَّل ولا يمنع الطلبة من الوصول للموقع
+runNode(path.join(process.cwd(), "scripts", "sync-admin.mjs"), [], "سكربت مزامنة المسؤول");
+
 const server = runNode(entry("next", "dist", "bin", "next"), ["start"], "خادم next");
 process.exit(server.status ?? 1);

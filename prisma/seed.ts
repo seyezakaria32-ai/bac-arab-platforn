@@ -973,7 +973,8 @@ async function main() {
   console.log(`  ✓ مجموع الدروس: ${lessonTotal}`);
 
   // ── حساب المسؤول ──
-  const adminEmail = process.env.ADMIN_EMAIL ?? "admin@bacarabe.sn";
+  // صفحة الدخول تبحث بالأحرف الصغيرة؛ بريد مخزَّن بأحرف كبيرة لا يُعثر عليه أبدًا
+  const adminEmail = (process.env.ADMIN_EMAIL ?? "admin@bacarabe.sn").trim().toLowerCase();
   const adminPassword = process.env.ADMIN_PASSWORD ?? "Admin@2026";
   await db.user.upsert({
     where: { email: adminEmail },
