@@ -17,6 +17,7 @@ function Field({
   autoComplete,
   hint,
   dir,
+  state,
 }: {
   label: string;
   name: string;
@@ -26,7 +27,10 @@ function Field({
   autoComplete?: string;
   hint?: string;
   dir?: "ltr" | "rtl";
+  /** نتيجة آخر إرسال: تعيد القيمة المكتوبة وتبرز الحقل الخاطئ */
+  state?: AuthState;
 }) {
+  const invalid = state?.field === name;
   return (
     <label className="block">
       <span className="mb-1.5 block text-[13px] font-bold text-ink-800">
@@ -42,7 +46,9 @@ function Field({
         required={required}
         placeholder={placeholder}
         autoComplete={autoComplete}
-        className="w-full rounded-xl border border-cream-300 bg-white px-4 py-3 text-[15px] text-ink-900 outline-none transition-colors placeholder:text-ink-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
+        defaultValue={state?.values?.[name]}
+        aria-invalid={invalid || undefined}
+        className="w-full rounded-xl border border-cream-300 bg-white aria-[invalid=true]:border-red-400 aria-[invalid=true]:ring-2 aria-[invalid=true]:ring-red-100 px-4 py-3 text-[15px] text-ink-900 outline-none transition-colors placeholder:text-ink-300 focus:border-brand-500 focus:ring-2 focus:ring-brand-100"
       />
       {hint && <span className="mt-1 block text-[12px] text-ink-500">{hint}</span>}
     </label>
@@ -79,6 +85,7 @@ export function LoginForm({ next }: { next?: string }) {
         dir="ltr"
         placeholder="you@example.com"
         autoComplete="email"
+        state={state}
       />
       <Field
         label="كلمة المرور"
@@ -86,6 +93,7 @@ export function LoginForm({ next }: { next?: string }) {
         type="password"
         placeholder="••••••••"
         autoComplete="current-password"
+        state={state}
       />
 
       <SubmitButton>تسجيل الدخول</SubmitButton>
@@ -121,6 +129,7 @@ export function RegisterForm({ next }: { next?: string }) {
         name="name"
         placeholder="مثال: أمينة ديوب"
         autoComplete="name"
+        state={state}
       />
       <Field
         label="البريد الإلكتروني"
@@ -129,6 +138,7 @@ export function RegisterForm({ next }: { next?: string }) {
         dir="ltr"
         placeholder="you@example.com"
         autoComplete="email"
+        state={state}
       />
       <Field
         label="رقم الهاتف / واتساب"
@@ -138,6 +148,7 @@ export function RegisterForm({ next }: { next?: string }) {
         required={false}
         placeholder="+221 77 000 00 00"
         autoComplete="tel"
+        state={state}
       />
       <Field
         label="كلمة المرور"
@@ -145,6 +156,7 @@ export function RegisterForm({ next }: { next?: string }) {
         type="password"
         placeholder="••••••••"
         autoComplete="new-password"
+        state={state}
         hint="٨ أحرف على الأقل."
       />
 

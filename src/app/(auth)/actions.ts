@@ -11,7 +11,20 @@ import {
 } from "@/lib/auth";
 import { getSettings } from "@/lib/settings";
 
-export type AuthState = { error?: string; field?: string } | null;
+export type AuthState = {
+  error?: string;
+  field?: string;
+  /** ما كتبه الطالب، ليُعاد إلى الحقول بعد الخطأ — كلمة المرور لا تُعاد أبدًا */
+  values?: Record<string, string>;
+} | null;
+
+/**
+ * React 19 يفرغ النموذج بعد كل إرسال عبر server action، فكان أيّ خطأ صغير
+ * (كلمة مرور قصيرة، بريد مسجَّل) يمحو الاسم والبريد والهاتف ويُلزم الطالب
+ * بإعادة كتابتها كلّها. نعيد القيم مع الخطأ لتملأ الحقول من جديد.
+ */
+const keepValues = (formData: FormData, keys: string[]) =>
+  Object.fromEntries(keys.map((k) => [k, String(formData.get(k) ?? "")]));
 
 const safeNext = (next: unknown) => {
   const value = typeof next === "string" ? next : "";
@@ -36,6 +49,14 @@ const registerSchema = z.object({
 });
 
 export async function registerAction(
+  prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const result = await register(prev, formData);
+  return result && { ...result, values: keepValues(formData, ["name", "email", "phone"]) };
+}
+
+async function register(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
@@ -90,6 +111,14 @@ const loginSchema = z.object({
 });
 
 export async function loginAction(
+  prev: AuthState,
+  formData: FormData,
+): Promise<AuthState> {
+  const result = await login(prev, formData);
+  return result && { ...result, values: keepValues(formData, ["email"]) };
+}
+
+async function login(
   _prev: AuthState,
   formData: FormData,
 ): Promise<AuthState> {
