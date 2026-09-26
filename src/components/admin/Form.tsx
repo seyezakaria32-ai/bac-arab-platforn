@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useTransition, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useTransition, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { useRouter } from "next/navigation";
 import { Alert } from "@/components/ui";
@@ -190,8 +190,39 @@ export function AdminForm({
     action,
     null,
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const submitted = useRef<FormData | null>(null);
+
+  /**
+   * React 19 يعيد النموذج إلى قيمه الأصلية بعد كل إرسال. بعد الحفظ هذا
+   * مقبول (القيم الأصلية صارت المحفوظة)، أمّا بعد خطأ فكان يمحو ما كتبه
+   * المدير للتوّ ويُرجع القيم القديمة. نعيد ما أُرسل إلى الحقول بعد الخطأ.
+   */
+  useEffect(() => {
+    const form = formRef.current;
+    const data = submitted.current;
+    if (!form || !data || !state || state.ok) return;
+    for (const el of Array.from(form.elements)) {
+      if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el instanceof HTMLSelectElement)) continue;
+      if (!el.name || el.type === "file" || el.type === "hidden") continue;
+      if (el instanceof HTMLInputElement && (el.type === "checkbox" || el.type === "radio")) {
+        el.checked = data.getAll(el.name).includes(el.value);
+      } else {
+        const v = data.get(el.name);
+        if (typeof v === "string") el.value = v;
+      }
+    }
+  }, [state]);
+
   return (
-    <form action={formAction} className={className}>
+    <form
+      ref={formRef}
+      action={(fd) => {
+        submitted.current = fd;
+        formAction(fd);
+      }}
+      className={className}
+    >
       {state && (
         <Alert tone={state.ok ? "success" : "error"}>{state.message}</Alert>
       )}
