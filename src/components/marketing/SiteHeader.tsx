@@ -6,18 +6,13 @@ import { Logo } from "@/components/ui/Logo";
 import { buttonClass } from "@/components/ui";
 import { IconMenu, IconClose } from "@/components/ui/icons";
 
-const NAV = [
-  { href: "#about", label: "عن البرنامج" },
-  { href: "#learn", label: "ماذا ستتعلّم؟" },
-  { href: "#curriculum", label: "المنهج" },
-  { href: "#plans", label: "الباقات" },
-  { href: "#faq", label: "أسئلة شائعة" },
-];
-
+/** روابط القائمة تُبنى من أقسام الصفحة الرئيسية (اسم القسم في القائمة) */
 export function SiteHeader({
   user,
+  nav,
 }: {
   user: { name: string; role: string } | null;
+  nav: { href: string; label: string }[];
 }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -50,7 +45,7 @@ export function SiteHeader({
         <Logo />
 
         <nav className="hidden items-center gap-1 lg:flex">
-          {NAV.map((item) => (
+          {nav.map((item) => (
             <a
               key={item.href}
               href={item.href}
@@ -101,7 +96,7 @@ export function SiteHeader({
       {open && (
         <div className="fixed inset-x-0 top-16 bottom-0 z-[60] border-t border-cream-300 bg-cream-50 px-4 py-5 sm:top-[72px] lg:hidden">
           <nav className="flex flex-col gap-1">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <a
                 key={item.href}
                 href={item.href}

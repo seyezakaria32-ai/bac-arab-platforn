@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { BUNDLED_IMAGES } from "@/lib/settings";
+import { getPlacementOptions } from "@/lib/sections/server";
 import {
   aspectCss,
   CTA_TONES,
@@ -12,7 +13,6 @@ import {
   INTERVAL_OPTIONS_S,
   PER_VIEW_OPTIONS,
   SLIDER_ASPECTS,
-  SLIDER_PLACEMENTS,
 } from "@/lib/sliders";
 import { deleteSliderAction, saveSliderAction } from "../actions";
 import {
@@ -50,6 +50,7 @@ export default async function SliderEditPage({
   if (!slider) notFound();
 
   const aspect = aspectCss(slider.aspect);
+  const placements = await getPlacementOptions("slider");
   const cta = toCta(slider);
   const previewHref = slider.placement.startsWith("dashboard.") ? "/dashboard" : "/";
 
@@ -138,7 +139,8 @@ export default async function SliderEditPage({
               label="مكانه في الموقع"
               name="placement"
               defaultValue={slider.placement}
-              options={SLIDER_PLACEMENTS.map((p) => ({ value: p.key, label: p.label }))}
+              options={placements.map((p) => ({ value: p.key, label: p.label }))}
+              hint="الأماكن تتبع أقسام الصفحة: إن رتّبتها من «تصميم الموقع» انتقل العارض مع قسمه."
             />
             <Field
               label="الترتيب في الموضع نفسه"

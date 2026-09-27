@@ -15,7 +15,7 @@ export default async function AdminLayout({
         nav={[
           { href: "/admin", label: "الإحصائيات" },
           { href: "/admin/content", label: "المحتوى" },
-          { href: "/admin/appearance", label: "الواجهة" },
+          { href: "/admin/design", label: "تصميم الموقع" },
           { href: "/admin/sliders", label: "السلايدر" },
           { href: "/admin/buttons", label: "الأزرار" },
           { href: "/admin/students", label: "الطلاب" },

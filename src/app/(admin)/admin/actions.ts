@@ -780,82 +780,6 @@ export async function deleteCouponAction(id: string): Promise<AdminResult> {
 
 /* ═══════════════════════ صور الواجهة ═══════════════════════ */
 
-/** يقبل ملفًا مرفوعًا أو اختيارًا من الصور الجاهزة، ويعيد المسار */
-async function resolveImageInput(
-  formData: FormData,
-): Promise<{ url: string | null; error?: string }> {
-  const file = formData.get("file");
-  if (file instanceof File && file.size > 0) {
-    try {
-      const stored = await saveUpload(file, "site");
-      return { url: stored.url };
-    } catch (error) {
-      return {
-        url: null,
-        error:
-          error instanceof UploadError ? error.message : "تعذّر رفع الصورة",
-      };
-    }
-  }
-  const picked = str(formData.get("pick"));
-  return { url: picked || null };
-}
-
-/**
- * حفظ صورة في الصفحة الرئيسية.
- * slot = "hero" لبطاقة الأستاذ، أو رقم الموضع في شبكة الملصقات.
- */
-export async function saveSiteImageAction(
-  _prev: AdminResult | null,
-  formData: FormData,
-): Promise<AdminResult> {
-  await guard();
-  const slot = str(formData.get("slot"));
-  const { url, error } = await resolveImageInput(formData);
-  if (error) return { ok: false, message: error };
-
-  const settings = await getSettings();
-
-  if (slot === "hero") {
-    if (!url) return { ok: false, message: "اختر صورة أو ارفع ملفًا أولًا" };
-    await setSetting("site.heroImage", url, "site");
-    revalidatePath("/");
-    return { ok: true, message: "حُدّثت صورة الأستاذ في الصفحة الرئيسية" };
-  }
-
-  const index = Number(slot);
-  const gallery = [...settings["site.gallery"]];
-  const alt = str(formData.get("alt"));
-
-  if (slot === "new") {
-    if (!url) return { ok: false, message: "اختر صورة أو ارفع ملفًا أولًا" };
-    if (gallery.length >= 8) {
-      return { ok: false, message: "الحدّ الأقصى ٨ صور في الشبكة" };
-    }
-    gallery.push({ src: url, alt: alt || "صورة من البرنامج" });
-  } else {
-    if (!Number.isInteger(index) || index < 0 || index >= gallery.length) {
-      return { ok: false, message: "موضع غير صالح" };
-    }
-    const current = gallery[index];
-    const nextSrc = url ?? current.src;
-    if (!nextSrc) return { ok: false, message: "اختر صورة أو ارفع ملفًا أولًا" };
-    gallery[index] = { src: nextSrc, alt: alt || current.alt };
-  }
-
-  await setSetting("site.gallery", gallery, "site");
-  revalidatePath("/");
-  return {
-    ok: true,
-    message:
-      slot === "new"
-        ? "أُضيفت الصورة إلى الشبكة"
-        : url
-          ? "حُدّثت الصورة"
-          : "حُدّث وصف الصورة",
-  };
-}
-
 /**
  * فيديو التعريف في الصفحة الرئيسية.
  * الرابط إمّا يوتيوب/فيميو، أو مسار ملف رُفع عبر /api/admin/upload-video.
@@ -909,17 +833,6 @@ export async function saveIntroVideoAction(
       ? "حُفظ فيديو التعريف — يظهر الآن بعد أعلى الصفحة الرئيسية"
       : "حُذف الرابط — قسم الفيديو مخفي عن الزوّار",
   };
-}
-
-/** العودة إلى صور الهوية الأصلية */
-export async function resetSiteImagesAction(): Promise<AdminResult> {
-  await guard();
-  await db.setting.deleteMany({
-    where: { key: { in: ["site.heroImage", "site.gallery"] } },
-  });
-  revalidatePath("/");
-  refresh();
-  return { ok: true, message: "أُعيدت الصور الأصلية" };
 }
 
 /* ═══════════════════════ الإعدادات ═══════════════════════ */

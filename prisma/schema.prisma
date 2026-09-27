@@ -490,3 +490,23 @@ model SiteButton {
 
   @@index([placement, isActive])
 }
+
+/// قسم من أقسام الصفحة الرئيسية: نوعه وترتيبه ومحتواه، يُدار من «تصميم الموقع»
+model PageSection {
+  id        String   @id @default(cuid())
+  page      String   @default("home")
+  /// مفتاح ثابت للأقسام الأصلية وللأنواع التي لا تتكرّر (hero، about…) — يمنع
+  /// تكرارها ويُبقي روابطها (#about) ثابتة؛ فارغ للأقسام المضافة
+  key       String?
+  /// نوع القسم — انظر SECTION_DEFS في src/lib/sections/registry.ts
+  type      String
+  order     Int      @default(0)
+  isVisible Boolean  @default(true)
+  /// محتوى القسم JSON: النصوص والصور والقوائم؛ الحقل الناقص يأخذ قيمته الافتراضية
+  data      String   @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([page, key])
+  @@index([page, order])
+}

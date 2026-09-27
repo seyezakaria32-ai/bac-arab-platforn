@@ -2,6 +2,7 @@ import { ImageSlider } from "@/components/marketing/ImageSlider";
 import { CtaButton } from "@/components/marketing/CtaButton";
 import { aspectCss } from "@/lib/sliders";
 import type { Block } from "@/lib/blocks";
+import type { BottomSpace, Surface } from "@/lib/sections/registry";
 import { reveal } from "@/lib/reveal";
 
 /**
@@ -16,8 +17,7 @@ export function BlockSlot({
   bare = false,
   align = "center",
   dark = false,
-  tight = false,
-  surface = "cream",
+  after,
   className = "",
 }: {
   blocks?: Block[];
@@ -26,17 +26,13 @@ export function BlockSlot({
   /** خلفية الموضع داكنة (الواجهة الأولى) */
   dark?: boolean;
   /**
-   * الموضع يلي قسمًا بهامش سفلي كبير: الهامشان كانا يتراكمان (96px + 48px)
-   * فيبدو الزرّ منفصلًا عمّا فوقه. نسحب الموضع إلى داخل هامش القسم السابق.
-   * يجب أن يطابق surface لونَ ذلك القسم، وإلا ظهر الزرّ على حدّ اللونين.
+   * القسم الظاهر قبل الموضع مباشرة: لونه وهامشه السفلي. الموضع يأخذ لونه
+   * فيبدو امتدادًا له (زرّ بعد «الأسئلة الشائعة» على الأبيض لا في شريط كريمي
+   * منفصل)، ويُسحب إلى داخل هامشه السفلي حتى لا يتراكم الهامشان (96px + 48px)
+   * فيبدو الزرّ بعيدًا عمّا فوقه. بعد قسم بخلفية الهوية الداكنة يبدأ الموضع
+   * بلون الصفحة وهوامشه العادية: التدرّج لا يتّصل بين عنصرين دون أن يظهر خطّ.
    */
-  tight?: boolean;
-  /**
-   * لون خلفية الموضع، مطابقًا للقسم الذي يليه الموضع: بعد قسم أبيض (الأسئلة
-   * الشائعة مثلًا) يظهر الزرّ على الأبيض امتدادًا لذلك القسم، لا في شريط
-   * كريمي منفصل بينه وبين ما بعده.
-   */
-  surface?: "cream" | "white";
+  after?: { surface: Surface; bottom: BottomSpace };
   className?: string;
 }) {
   if (!blocks?.length) return null;
@@ -75,14 +71,21 @@ export function BlockSlot({
   // زرّ وحده لا يحتاج هوامش قسم كامل
   const onlyButtons = blocks.every((b) => b.kind === "button");
   // الخلفية على عرض الصفحة كاملًا، والمحتوى داخل الحاوية
+  const joins = after && after.surface !== "brand";
+  const white = joins && after.surface === "white";
+  // مقدار السحب بحسب هامش القسم السابق: 80/96px ← نتركه 40px، و64px ← 40px
+  const pull = !joins
+    ? ""
+    : after.bottom === "lg"
+      ? "-mt-10 md:-mt-14"
+      : after.bottom === "md"
+        ? "-mt-6"
+        : "";
+  const top = pull ? "pt-0" : onlyButtons ? "pt-10 md:pt-12" : "pt-12 md:pt-16";
   return (
-    <section
-      className={`${surface === "white" ? "bg-white" : ""} ${tight ? "-mt-10 md:-mt-14" : ""} ${className}`}
-    >
+    <section className={`${white ? "bg-white" : ""} ${pull} ${className}`}>
       <div
-        className={`container-page space-y-12 ${
-          tight ? "pt-0" : onlyButtons ? "pt-10 md:pt-12" : "pt-12 md:pt-16"
-        } ${onlyButtons ? "pb-10 md:pb-12" : "pb-12 md:pb-16"}`}
+        className={`container-page space-y-12 ${top} ${onlyButtons ? "pb-10 md:pb-12" : "pb-12 md:pb-16"}`}
       >
         {content}
       </div>

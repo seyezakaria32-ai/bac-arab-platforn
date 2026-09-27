@@ -1,21 +1,11 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { getSettings, setSetting } from "@/lib/settings";
-import { isPlacementFor, placementsFor, type PlacementKey } from "@/lib/placements";
 
 /**
  * عارضات الصور: أشكال الإطار، طرق التنقّل، والتحميل.
  * المواضع مشتركة مع الأزرار — انظر src/lib/placements.ts.
  */
-
-export { placementLabel } from "@/lib/placements";
-
-/** كل موضع يصلح فيه عارض */
-export const SLIDER_PLACEMENTS = placementsFor("slider");
-
-export type SliderPlacement = PlacementKey;
-
-export const isPlacement = (key: string): key is PlacementKey => isPlacementFor("slider", key);
 
 export const SLIDER_ASPECTS = [
   { key: "poster", label: "ملصق طولي (≈ 9:10)", css: "760 / 853" },
@@ -124,7 +114,7 @@ export async function ensureDefaultSlider() {
 /** العارضات المفعّلة ذات الصور، مجمّعة حسب الموضع، لصفحة واحدة */
 export async function getSlidersByPlacement(
   prefix: "home" | "dashboard" | "lesson",
-): Promise<Partial<Record<SliderPlacement, SliderView[]>>> {
+): Promise<Record<string, SliderView[]>> {
   const rows = await db.slider
     .findMany({
       where: { isActive: true, placement: { startsWith: `${prefix}.` } },
@@ -134,9 +124,9 @@ export async function getSlidersByPlacement(
     // قاعدة قديمة لم تُنشأ فيها الجداول بعد: الموقع يعمل بلا عارضات بدل أن يسقط
     .catch(() => []);
 
-  const byPlacement: Partial<Record<SliderPlacement, SliderView[]>> = {};
+  const byPlacement: Record<string, SliderView[]> = {};
   for (const s of rows) {
-    if (!isPlacement(s.placement) || s.slides.length === 0) continue;
+    if (s.slides.length === 0) continue;
     (byPlacement[s.placement] ??= []).push({
       id: s.id,
       order: s.order,

@@ -3,13 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
-import {
-  ensureDefaultSlider,
-  imagesCount,
-  placementLabel,
-  SLIDER_ASPECTS,
-  SLIDER_PLACEMENTS,
-} from "@/lib/sliders";
+import { ensureDefaultSlider, imagesCount, SLIDER_ASPECTS } from "@/lib/sliders";
+import { afterSection } from "@/lib/placements";
+import { getHomeSections, getPlacementOptions, placementLabelFrom, placementRankFrom } from "@/lib/sections/server";
 import { createSliderAction, deleteSliderAction, toggleSliderAction } from "./actions";
 import { AdminForm, ActionButton, Field, Select, SubmitButton } from "@/components/admin/Form";
 import { Badge, EmptyState } from "@/components/ui";
@@ -30,9 +26,13 @@ export default async function SlidersPage() {
     },
   });
 
-  // بترتيب ظهور المواضع في الموقع، لا بترتيب الإنشاء
-  const rank = (p: string) => SLIDER_PLACEMENTS.findIndex((x) => x.key === p);
-  sliders.sort((a, b) => rank(a.placement) - rank(b.placement) || a.order - b.order);
+  const [options, sections] = await Promise.all([getPlacementOptions("slider"), getHomeSections()]);
+  // بترتيب ظهور الأماكن في الموقع، لا بترتيب الإنشاء
+  sliders.sort(
+    (a, b) => placementRankFrom(options, a.placement) - placementRankFrom(options, b.placement) || a.order - b.order,
+  );
+  const about = sections.find((s) => s.type === "about");
+  const defaultPlacement = about ? afterSection(about.id) : (options[0]?.key ?? "");
 
   return (
     <div className="container-page max-w-5xl space-y-7 py-8">
@@ -61,8 +61,8 @@ export default async function SlidersPage() {
           <Select
             label="مكانه في الموقع"
             name="placement"
-            defaultValue="home.afterAbout"
-            options={SLIDER_PLACEMENTS.map((p) => ({ value: p.key, label: p.label }))}
+            defaultValue={defaultPlacement}
+            options={options.map((p) => ({ value: p.key, label: p.label }))}
             hint="يمكن تغييره لاحقًا"
           />
           <div className="sm:pb-6">
@@ -101,7 +101,7 @@ export default async function SlidersPage() {
                         <Badge tone="green">ظاهر في الموقع</Badge>
                       )}
                     </div>
-                    <p className="mt-1 text-[13px] text-ink-500">{placementLabel(s.placement)}</p>
+                    <p className="mt-1 text-[13px] text-ink-500">{placementLabelFrom(options, s.placement)}</p>
                     <p className="num mt-1 text-[12px] text-ink-500">
                       {imagesCount(s._count.slides)} · {s.perView} معًا على الحاسوب ·{" "}
                       كل {s.intervalMs / 1000} ث · {aspect.label}

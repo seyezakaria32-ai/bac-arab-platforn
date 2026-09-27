@@ -3,7 +3,16 @@ import { Logo } from "@/components/ui/Logo";
 import { IconWhatsapp } from "@/components/ui/icons";
 import { BRAND } from "@/lib/constants";
 
-export function SiteFooter({ whatsapp }: { whatsapp?: string }) {
+/** النصّ من «تصميم الموقع ← النصوص العامّة»، والروابط السريعة من القائمة العلوية */
+export function SiteFooter({
+  whatsapp,
+  text,
+  nav,
+}: {
+  whatsapp?: string;
+  text: string;
+  nav: { href: string; label: string }[];
+}) {
   const phone = (whatsapp ?? BRAND.whatsapp).replace(/[^0-9]/g, "");
 
   return (
@@ -11,11 +20,7 @@ export function SiteFooter({ whatsapp }: { whatsapp?: string }) {
       <div className="container-page grid gap-10 py-14 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <Logo />
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-500">
-            برنامج تدريبي مسجّل بالفيديو، تبدأه متى شئت وتتقدّم فيه بإيقاعك، يأخذ
-            بيد طالب البكالوريا من الصفر إلى إتقان منهجية الإجابة في التاريخ
-            والجغرافيا.
-          </p>
+          {text && <p className="mt-4 max-w-sm text-sm leading-relaxed text-ink-500">{text}</p>}
           <a
             href={`https://wa.me/${phone}`}
             target="_blank"
@@ -27,33 +32,20 @@ export function SiteFooter({ whatsapp }: { whatsapp?: string }) {
           </a>
         </div>
 
-        <div>
-          <h4 className="font-display text-sm font-bold text-ink-900">
-            روابط سريعة
-          </h4>
-          <ul className="mt-4 space-y-2.5 text-sm text-ink-500">
-            <li>
-              <a href="/#about" className="transition-colors hover:text-brand-700">
-                عن البرنامج
-              </a>
-            </li>
-            <li>
-              <a href="/#curriculum" className="transition-colors hover:text-brand-700">
-                المنهج الدراسي
-              </a>
-            </li>
-            <li>
-              <a href="/#plans" className="transition-colors hover:text-brand-700">
-                الباقات والأسعار
-              </a>
-            </li>
-            <li>
-              <a href="/#faq" className="transition-colors hover:text-brand-700">
-                الأسئلة الشائعة
-              </a>
-            </li>
-          </ul>
-        </div>
+        {nav.length > 0 && (
+          <div>
+            <h4 className="font-display text-sm font-bold text-ink-900">روابط سريعة</h4>
+            <ul className="mt-4 space-y-2.5 text-sm text-ink-500">
+              {nav.map((item) => (
+                <li key={item.href}>
+                  <a href={`/${item.href}`} className="transition-colors hover:text-brand-700">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
 
         <div>
           <h4 className="font-display text-sm font-bold text-ink-900">حسابي</h4>

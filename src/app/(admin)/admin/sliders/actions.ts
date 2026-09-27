@@ -9,11 +9,16 @@ import { ROLES } from "@/lib/constants";
 import {
   isCtaTone,
   isLoopMode,
-  isPlacement,
   PER_VIEW_OPTIONS,
   SLIDER_ASPECTS,
 } from "@/lib/sliders";
 import { cleanLink } from "@/lib/links";
+import { getPlacementOptions } from "@/lib/sections/server";
+
+/** مكان صالح لعارض: من أماكن الصفحة الحالية (تتبع أقسامها) أو لوحة الطالب وصفحة الدرس */
+async function isSliderPlacement(key: string) {
+  return (await getPlacementOptions("slider")).some((o) => o.key === key);
+}
 import type { AdminResult } from "../actions";
 
 /**
@@ -47,7 +52,7 @@ export async function createSliderAction(
   const name = str(formData.get("name"));
   const placement = str(formData.get("placement"));
   if (name.length < 2) return { ok: false, message: "اكتب اسمًا للعارض (حرفان على الأقل)" };
-  if (!isPlacement(placement)) return { ok: false, message: "اختر موضعًا من القائمة" };
+  if (!(await isSliderPlacement(placement))) return { ok: false, message: "اختر موضعًا من القائمة" };
 
   // الإطار الافتراضي بحسب الموضع: إعلانات اللوحة عريضة، والباقي ملصقات
   const isBanner = placement === "dashboard.top";
@@ -84,7 +89,7 @@ export async function saveSliderAction(
   const order = Number(formData.get("order"));
 
   if (name.length < 2) return { ok: false, message: "اكتب اسمًا للعارض" };
-  if (!isPlacement(placement)) return { ok: false, message: "اختر موضعًا من القائمة" };
+  if (!(await isSliderPlacement(placement))) return { ok: false, message: "اختر موضعًا من القائمة" };
   if (!PER_VIEW_OPTIONS.includes(perView as (typeof PER_VIEW_OPTIONS)[number])) {
     return { ok: false, message: "عدد الصور الظاهرة معًا بين ١ و٤" };
   }

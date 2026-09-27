@@ -1,7 +1,6 @@
 import "server-only";
 import { db } from "@/lib/db";
 import { getSlidersByPlacement, isCtaTone, type SliderCta, type SliderView } from "@/lib/sliders";
-import { isPlacementFor, type PlacementKey } from "@/lib/placements";
 
 /**
  * كل ما يُدار من لوحة الإدارة ويوضع في مواضع الموقع: العارضات والأزرار،
@@ -14,7 +13,8 @@ export type Block =
   | ({ kind: "slider" } & SliderView)
   | ({ kind: "button" } & ButtonView);
 
-export type BlocksByPlacement = Partial<Record<PlacementKey, Block[]>>;
+/** المفتاح مكان: home.after:<id>، home.hero، dashboard.top… */
+export type BlocksByPlacement = Record<string, Block[] | undefined>;
 
 export async function getBlocksByPlacement(
   prefix: "home" | "dashboard" | "lesson",
@@ -31,11 +31,10 @@ export async function getBlocksByPlacement(
   ]);
 
   const out: BlocksByPlacement = {};
-  for (const [key, list] of Object.entries(sliders) as [PlacementKey, SliderView[]][]) {
+  for (const [key, list] of Object.entries(sliders)) {
     out[key] = list.map((s) => ({ kind: "slider" as const, ...s }));
   }
   for (const b of buttons) {
-    if (!isPlacementFor("button", b.placement)) continue;
     (out[b.placement] ??= []).push({
       kind: "button",
       id: b.id,

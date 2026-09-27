@@ -3,7 +3,8 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { CTA_TONES, isCtaTone } from "@/lib/sliders";
-import { isDarkPlacement, placementLabel, placementRank, placementsFor } from "@/lib/placements";
+import { afterSection, isDarkPlacement, type PlacementOption } from "@/lib/placements";
+import { getHomeSections, getPlacementOptions, placementLabelFrom, placementRankFrom } from "@/lib/sections/server";
 import { LINK_HINT } from "@/lib/links";
 import { createButtonAction, deleteButtonAction, saveButtonAction, toggleButtonAction } from "./actions";
 import { AdminForm, ActionButton, Field, Select, SubmitButton, Toggle } from "@/components/admin/Form";
@@ -25,7 +26,15 @@ type ButtonRow = {
 };
 
 /** حقول الزرّ — مشتركة بين نموذج الإضافة ونموذج التعديل */
-function ButtonFields({ b }: { b?: ButtonRow }) {
+function ButtonFields({
+  b,
+  options,
+  defaultPlacement,
+}: {
+  b?: ButtonRow;
+  options: PlacementOption[];
+  defaultPlacement: string;
+}) {
   return (
     <div className="grid gap-4 sm:grid-cols-2">
       <Field
@@ -48,8 +57,9 @@ function ButtonFields({ b }: { b?: ButtonRow }) {
       <Select
         label="مكانه في الموقع"
         name="placement"
-        defaultValue={b?.placement ?? "home.afterAbout"}
-        options={placementsFor("button").map((p) => ({ value: p.key, label: p.label }))}
+        defaultValue={b?.placement ?? defaultPlacement}
+        options={options.map((p) => ({ value: p.key, label: p.label }))}
+        hint="الأماكن تتبع أقسام الصفحة: إن رتّبتها من «تصميم الموقع» انتقل الزرّ مع قسمه."
       />
       <Select
         label="لون الزرّ"
@@ -107,8 +117,17 @@ function Preview({ b }: { b: ButtonRow }) {
 
 export default async function ButtonsPage() {
   await requireAdmin();
-  const buttons = await db.siteButton.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] });
-  buttons.sort((a, b) => placementRank(a.placement) - placementRank(b.placement) || a.order - b.order);
+  const [buttons, options, sections] = await Promise.all([
+    db.siteButton.findMany({ orderBy: [{ order: "asc" }, { createdAt: "asc" }] }),
+    getPlacementOptions("button"),
+    getHomeSections(),
+  ]);
+  buttons.sort(
+    (a, b) => placementRankFrom(options, a.placement) - placementRankFrom(options, b.placement) || a.order - b.order,
+  );
+  // المكان المقترح لزرّ جديد: بعد «عن البرنامج» إن وُجد
+  const about = sections.find((s) => s.type === "about");
+  const defaultPlacement = about ? afterSection(about.id) : (options[0]?.key ?? "");
 
   return (
     <div className="container-page max-w-5xl space-y-7 py-8">
@@ -132,7 +151,7 @@ export default async function ButtonsPage() {
           زرّ جديد
         </h2>
         <AdminForm action={createButtonAction} className="mt-4 space-y-4">
-          <ButtonFields />
+          <ButtonFields options={options} defaultPlacement={defaultPlacement} />
           <SubmitButton variant="brand">إضافة الزرّ</SubmitButton>
         </AdminForm>
       </section>
@@ -150,7 +169,7 @@ export default async function ButtonsPage() {
                     <span className="font-display text-[15px] font-black text-ink-900">{b.label}</span>
                     {b.isActive ? <Badge tone="green">ظاهر</Badge> : <Badge tone="ink">مخفي</Badge>}
                   </div>
-                  <p className="mt-1 text-[12.5px] text-ink-500">{placementLabel(b.placement)}</p>
+                  <p className="mt-1 text-[12.5px] text-ink-500">{placementLabelFrom(options, b.placement)}</p>
                   <p className="mt-0.5 truncate text-[12px] text-ink-300" dir="ltr">
                     {b.url}
                   </p>
@@ -179,7 +198,7 @@ export default async function ButtonsPage() {
                   <div className="border-t border-cream-200 p-4">
                     <AdminForm action={saveButtonAction} className="space-y-4">
                       <input type="hidden" name="id" value={b.id} />
-                      <ButtonFields b={b} />
+                      <ButtonFields b={b} options={options} defaultPlacement={defaultPlacement} />
                       <Toggle label="ظاهر في الموقع" name="isActive" defaultChecked={b.isActive} />
                       <SubmitButton>حفظ التعديل</SubmitButton>
                     </AdminForm>

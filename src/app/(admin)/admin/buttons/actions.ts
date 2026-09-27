@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import { ROLES } from "@/lib/constants";
 import { cleanLink, LINK_HINT } from "@/lib/links";
-import { isPlacementFor } from "@/lib/placements";
+import { getPlacementOptions } from "@/lib/sections/server";
 import { isCtaTone } from "@/lib/sliders";
 import type { AdminResult } from "../actions";
 
@@ -40,7 +40,7 @@ type ButtonData = {
 };
 
 /** تحقّق مشترك بين الإنشاء والتعديل */
-function parse(formData: FormData): { ok: true; data: ButtonData } | { ok: false; message: string } {
+async function parse(formData: FormData): Promise<{ ok: true; data: ButtonData } | { ok: false; message: string }> {
   const label = str(formData.get("label"));
   const rawUrl = str(formData.get("url"));
   const tone = str(formData.get("tone")) || "brand";
@@ -57,7 +57,8 @@ function parse(formData: FormData): { ok: true; data: ButtonData } | { ok: false
   if (!isCtaTone(tone)) return { ok: false, message: "اختر لون الزرّ من القائمة" };
   if (title.length > 80) return { ok: false, message: "العنوان فوق الزرّ طويل — ٨٠ حرفًا على الأكثر" };
   if (note.length > 90) return { ok: false, message: "السطر تحت الزرّ طويل — ٩٠ حرفًا على الأكثر" };
-  if (!isPlacementFor("button", placement)) return { ok: false, message: "اختر مكان الزرّ من القائمة" };
+  const places = await getPlacementOptions("button");
+  if (!places.some((p) => p.key === placement)) return { ok: false, message: "اختر مكان الزرّ من القائمة" };
   if (!Number.isFinite(order)) return { ok: false, message: "الترتيب رقم صحيح" };
 
   return {
@@ -79,7 +80,7 @@ export async function createButtonAction(
   formData: FormData,
 ): Promise<AdminResult> {
   await guard();
-  const parsed = parse(formData);
+  const parsed = await parse(formData);
   if (!parsed.ok) return { ok: false, message: parsed.message };
   await db.siteButton.create({ data: parsed.data });
   refresh();
@@ -92,7 +93,7 @@ export async function saveButtonAction(
 ): Promise<AdminResult> {
   await guard();
   const id = str(formData.get("id"));
-  const parsed = parse(formData);
+  const parsed = await parse(formData);
   if (!parsed.ok) return { ok: false, message: parsed.message };
   const saved = await db.siteButton
     .update({ where: { id }, data: { ...parsed.data, isActive: formData.get("isActive") === "on" } })

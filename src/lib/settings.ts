@@ -1,6 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { db } from "./db";
+import { DEFAULT_FONTS, type FontChoice } from "./fonts";
 
 /**
  * إعدادات المنصّة القابلة للتعديل من لوحة الإدارة دون تغيير الكود.
@@ -34,6 +35,13 @@ export type SettingsMap = {
   "site.gallery": SiteImage[];
   /** فيديو التعريف بعد الـ Hero — يُخفى القسم ما دام الرابط فارغًا */
   "site.introVideo": IntroVideo;
+  /** عنوان الموقع ووصفه في نتائج البحث وبطاقات المشاركة */
+  "site.seoTitle": string;
+  "site.seoDescription": string;
+  /** الفقرة تحت الشعار أسفل كل صفحة */
+  "site.footerText": string;
+  /** الخطّ المختار لكل دور — يُطبَّع عند القراءة (normalizeFonts) */
+  "theme.fonts": FontChoice;
 };
 
 export type IntroVideo = {
@@ -74,7 +82,7 @@ export const DEFAULT_SETTINGS: SettingsMap = {
   "site.telegram": "",
   "site.supportEmail": "contact@bacarabe.sn",
 
-  // ── صور الواجهة (تُستبدل من لوحة الإدارة ← الواجهة) ──
+  // ── صور الواجهة: صورة الأستاذ تُنقل إلى قسم «الواجهة الأولى» عند أوّل تشغيل (sections/server.ts) ──
   "site.heroImage": "/brand/instructor.png",
   "site.gallery": [
     { src: "/brand/poster-program.jpg", alt: "ملصق البرنامج" },
@@ -82,6 +90,12 @@ export const DEFAULT_SETTINGS: SettingsMap = {
     { src: "/brand/poster-geo-2.jpg", alt: "الفصل الثاني — الجغرافيا" },
     { src: "/brand/poster-unit-1.jpg", alt: "الوحدة الأولى" },
   ],
+  "site.seoTitle": "الدليل الشامل لمنهجية الإجابة في التاريخ والجغرافيا | Bac Arabe Sénégal",
+  "site.seoDescription":
+    "برنامج تدريبي مسجّل بالفيديو لطلبة البكالوريا — ابدأ متى شئت وتعلّم بإيقاعك — لإتقان منهجية الإجابة في التاريخ والجغرافيا: الإنشاء التاريخي، التعليق على الوثائق، المقالة الجغرافية، وإنجاز المبيانات.",
+  "site.footerText":
+    "برنامج تدريبي مسجّل بالفيديو، تبدأه متى شئت وتتقدّم فيه بإيقاعك، يأخذ بيد طالب البكالوريا من الصفر إلى إتقان منهجية الإجابة في التاريخ والجغرافيا.",
+  "theme.fonts": DEFAULT_FONTS,
   "site.introVideo": {
     url: "",
     title: "تعرّف على البرنامج وعلى أستاذك",
